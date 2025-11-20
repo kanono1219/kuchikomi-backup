@@ -57,4 +57,20 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+    
+    
+    public function show(Request $request)
+    {
+        $user = $request->user();
+        $favoriteEvents = $user->favoriteEvents()
+            ->withAvgRating()
+            ->withReviewsCount()
+            ->latest()
+            ->get();
+    
+        return view('profile.show', [
+            'user' => $user,
+            'favoriteEvents' => $favoriteEvents,
+        ]);
+    }
 }

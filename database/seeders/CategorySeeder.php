@@ -1,5 +1,4 @@
 <?php
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -16,11 +15,11 @@ class CategorySeeder extends Seeder
     public function run()
     {
         DB::table('categories')->insert([
-            ['name' => '祭り',],
-            ['name' => '音楽イベント',],
-            ['name' => '展示会',],
-            ['name' => 'スポーツイベント',],
-            ['name' => '式典',],
+            ['name' => '祭り', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => '音楽イベント', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => '展示会', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'スポーツイベント', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => '式典', 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

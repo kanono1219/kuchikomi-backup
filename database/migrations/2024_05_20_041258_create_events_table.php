@@ -6,32 +6,28 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::create('events', function (Blueprint $table) {
-            $table->id(); // 自動増分のプライマリキー
-            $table->string('name'); // イベント名
-            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade'); // カテゴリーID。categoriesテーブルへの外部キー
-            $table->text('overview'); // イベント内容
-            $table->string('location'); // イベント会場
-            $table->dateTime('start_date'); // イベント開始日
-            $table->dateTime('end_date'); // イベント終了日
-            $table->string('image_url')->nullable(); // イベント告知用ポスターのパス
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('name');
+            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
+            $table->text('overview');
+            $table->string('location')->nullable();
+            $table->string('address')->nullable();
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
+            $table->string('image_url')->nullable();
+            $table->string('external_url')->nullable();
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
+            $table->enum('venue_type', ['indoor', 'outdoor'])->default('indoor');
             $table->timestamps();
-            $table->softDeletes(); // これがdeleted_atカラムを追加する
+            $table->softDeletes();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::dropIfExists('events');

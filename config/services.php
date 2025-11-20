@@ -30,5 +30,15 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
+    'google' => [
+    'maps_api_key' => env('GOOGLE_MAPS_API_KEY'),
+    ],
+    
+    'openweather' => [
+        'key' => env('OPENWEATHER_API_KEY'),
+        'lat' => env('OPENWEATHER_LAT', '3.6888671'),
+        'lon' => env('OPENWEATHER_LON', '125.5353146'),
+        'cache_duration' => env('WEATHER_CACHE_DURATION', 1800),
+    ],
 
 ];

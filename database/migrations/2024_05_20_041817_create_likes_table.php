@@ -14,10 +14,12 @@ return new class extends Migration
     public function up()
     {
         Schema::create('likes', function (Blueprint $table) {
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // usersテーブルへの外部キー
-            $table->foreignId('review_id')->constrained('reviews')->onDelete('cascade'); // reviewsテーブルへの外部キー
+            $table->id(); // 主キーを追加
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('review_id')->constrained('reviews')->onDelete('cascade');
+            $table->timestamps();
             
-            $table->primary(['user_id', 'review_id']); // 複合主キーの設定
+            $table->unique(['user_id', 'review_id']); // プライマリキーの代わりにユニーク制約を使用
         });
     }
 

@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('email')->unique(); // メールアドレス
             $table->string('password'); // パスワード
             $table->string('image_url')->nullable(); // プロフィール画像の保存先パス
+            $table->rememberToken(); 
+            $table->timestamps();
         });
     }
 
