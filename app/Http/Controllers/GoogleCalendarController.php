@@ -17,11 +17,30 @@ class GoogleCalendarController extends Controller
     public function __construct()
     {
         $this->client = new Client();
-        $this->client->setApplicationName('Okinawa Events');
+        $this->client->setApplicationName(config('app.name', 'Okinawa Events'));
         $this->client->setScopes([Calendar::CALENDAR]);
-        $this->client->setAuthConfig(config_path('google-calendar-config.json'));
+
+        // 環境変数から認証情報を設定
+        $clientId = env('GOOGLE_CALENDAR_CLIENT_ID');
+        $clientSecret = env('GOOGLE_CALENDAR_CLIENT_SECRET');
+        $redirectUri = env('GOOGLE_CALENDAR_REDIRECT_URI', route('google-calendar.callback'));
+
+        if ($clientId && $clientSecret) {
+            $this->client->setClientId($clientId);
+            $this->client->setClientSecret($clientSecret);
+            $this->client->setRedirectUri($redirectUri);
+        }
+
         $this->client->setAccessType('offline');
         $this->client->setPrompt('consent');
+    }
+
+    /**
+     * Google Calendar設定が正しく行われているかチェック
+     */
+    private function isConfigured()
+    {
+        return env('GOOGLE_CALENDAR_CLIENT_ID') && env('GOOGLE_CALENDAR_CLIENT_SECRET');
     }
 
     /**
@@ -29,8 +48,19 @@ class GoogleCalendarController extends Controller
      */
     public function authenticate()
     {
-        $authUrl = $this->client->createAuthUrl();
-        return redirect($authUrl);
+        if (!$this->isConfigured()) {
+            return redirect()->route('index')->with('error',
+                'Google Calendar APIが設定されていません。管理者に連絡してください。');
+        }
+
+        try {
+            $authUrl = $this->client->createAuthUrl();
+            return redirect($authUrl);
+        } catch (\Exception $e) {
+            \Log::error('Google Calendar Authentication Error: ' . $e->getMessage());
+            return redirect()->route('index')->with('error',
+                'Google認証エラーが発生しました: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -38,6 +68,11 @@ class GoogleCalendarController extends Controller
      */
     public function callback(Request $request)
     {
+        if (!$this->isConfigured()) {
+            return redirect()->route('index')->with('error',
+                'Google Calendar APIが設定されていません。管理者に連絡してください。');
+        }
+
         $code = $request->query('code');
 
         if (!$code) {
@@ -46,8 +81,14 @@ class GoogleCalendarController extends Controller
 
         try {
             $accessToken = $this->client->fetchAccessTokenWithAuthCode($code);
+
+            // エラーチェック
+            if (isset($accessToken['error'])) {
+                throw new \Exception($accessToken['error_description'] ?? $accessToken['error']);
+            }
+
             $user = Auth::user();
-            
+
             // ユーザーのトークンを保存
             $user->update([
                 'google_calendar_token' => json_encode($accessToken),
@@ -57,6 +98,7 @@ class GoogleCalendarController extends Controller
             return redirect()->route('index')->with('success', 'Google カレンダーに接続しました');
 
         } catch (\Exception $e) {
+            \Log::error('Google Calendar Callback Error: ' . $e->getMessage());
             return redirect()->route('index')->with('error', 'Google認証エラー: ' . $e->getMessage());
         }
     }
