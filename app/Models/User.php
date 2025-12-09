@@ -1,6 +1,5 @@
 <?php
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -19,6 +18,8 @@ class User extends Authenticatable
         'image_url',
         'event_notifications_enabled',
         'notification_days_before',
+        'google_calendar_token',
+        'google_calendar_connected',
     ];
 
     protected $hidden = [
@@ -28,6 +29,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'google_calendar_connected' => 'boolean',
     ];
 
     public function favoriteEvents(): BelongsToMany
@@ -35,8 +37,6 @@ class User extends Authenticatable
         return $this->belongsToMany(Event::class, 'event_favorites')->withTimestamps();
     }
 
-    // 追加するリレーション
-    
     /**
      * ユーザーが作成した参加者募集
      */
@@ -48,28 +48,71 @@ class User extends Authenticatable
     /**
      * ユーザーが参加リクエストした募集
      */
-    public function participatingBuddyPosts(): BelongsToMany
+    public function joinRequests(): BelongsToMany
     {
-        return $this->belongsToMany(BuddyPost::class, 'buddy_post_participants')
-            ->withPivot('status')
-            ->withTimestamps();
+        return $this->belongsToMany(
+            BuddyPost::class,
+            'buddy_post_join_requests',
+            'user_id',
+            'buddy_post_id'
+        )->withTimestamps();
     }
 
     /**
-     * 参加承認された募集のみを取得
+     * ユーザーが作成したイベント
      */
-    public function approvedBuddyPosts(): BelongsToMany
+    public function events(): HasMany
     {
-        return $this->participatingBuddyPosts()
-            ->wherePivot('status', 'approved');
+        return $this->hasMany(Event::class);
     }
 
     /**
-     * 保留中の参加リクエストを取得
+     * ユーザーが作成したレビュー
      */
-    public function pendingBuddyPosts(): BelongsToMany
+    public function reviews(): HasMany
     {
-        return $this->participatingBuddyPosts()
-            ->wherePivot('status', 'pending');
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * ユーザーが参加しているチャットルーム
+     */
+    public function chatRooms(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ChatRoom::class,
+            'chat_room_users',
+            'user_id',
+            'chat_room_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * ユーザーが送信したメッセージ
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class);
+    }
+
+    /**
+     * ユーザーがしたレビューコメント
+     */
+    public function reviewComments(): HasMany
+    {
+        return $this->hasMany(ReviewComment::class);
+    }
+
+    /**
+     * ユーザーがしたいいね
+     */
+    public function likes(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Review::class,
+            'review_likes',
+            'user_id',
+            'review_id'
+        )->withTimestamps();
     }
 }

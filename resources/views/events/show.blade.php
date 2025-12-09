@@ -9,56 +9,8 @@
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
 </head>
 <x-app-layout>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const favoriteButton = document.querySelector('.favorite-button');
-        if (favoriteButton) {
-            favoriteButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                const form = this.closest('form');
-                const url = form.action;
-                const method = form.querySelector('input[name="_method"]') ? 'DELETE' : 'POST';
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-    
-                fetch(url, {
-                    method: method,
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    credentials: 'same-origin',
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const countSpan = this.querySelector('.favorite-count');
-                        countSpan.textContent = `${data.favoritesCount} お気に入り`;
-                        
-                        if (data.isFavorited) {
-                            this.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                            this.classList.add('bg-red-500', 'hover:bg-red-600');
-                            this.querySelector('svg').setAttribute('fill', 'currentColor');
-                            if (!form.querySelector('input[name="_method"]')) {
-                                form.insertAdjacentHTML('beforeend', '<input type="hidden" name="_method" value="DELETE">');
-                            }
-                        } else {
-                            this.classList.remove('bg-red-500', 'hover:bg-red-600');
-                            this.classList.add('bg-blue-500', 'hover:bg-blue-600');
-                            this.querySelector('svg').setAttribute('fill', 'none');
-                            const methodInput = form.querySelector('input[name="_method"]');
-                            if (methodInput) methodInput.remove();
-                        }
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            });
-        }
-    });
-</script>
-    <body class="bg-gray-100 font-sans">
-        <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="py-8">
+        <div class="container mx-auto px-4 max-w-4xl">
             <!-- 成功・エラーメッセージの表示 -->
             @if(session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
@@ -74,6 +26,7 @@
 
             <h1 class="text-4xl font-bold mb-8 text-gray-800 border-b-2 pb-2">{{ $event->name }}</h1>
             
+            <!-- イベント画像とのセクション -->
             <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
                 @if($event->image_path)
                     <img src="{{ asset('storage/' . $event->image_path) }}" alt="{{ $event->name }}" class="w-full h-80 object-cover">
@@ -91,18 +44,34 @@
                     <p class="text-gray-700 mb-6 text-lg leading-relaxed">{{ $event->overview }}</p>
                     
                     <div class="text-sm text-gray-600 space-y-2">
-                        <p class="flex items-center"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>開催場所: {{ $event->location }}</p>
                         <p class="flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            開催場所: {{ $event->location }}
+                        </p>
+                        <p class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                             </svg>
                             住所: {{ $event->address ?? '住所情報がありません' }}
                         </p>
-                        <p class="flex items-center"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>開始日時: {{ $event->start_date->format('Y年m月d日 H:i') }}</p>
-                        <p class="flex items-center"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>終了日時: {{ $event->end_date->format('Y年m月d日 H:i') }}</p>
+                        <p class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            開始日時: {{ $event->start_date->format('Y年m月d日 H:i') }}
+                        </p>
+                        <p class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            終了日時: {{ $event->end_date->format('Y年m月d日 H:i') }}
+                        </p>
                         @if($event->external_url)
                             <p class="flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
                                 </svg>
                                 <a href="{{ $event->external_url }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 transition duration-300">
@@ -114,32 +83,32 @@
                 </div>
             </div>
             
-            <!-- 地図を表示する div 要素 -->
+            <!-- 地図表示 -->
             <div id="map" class="w-full h-64 mb-8 rounded-lg shadow-md"></div>
             
+            <!-- ========== ★ 修正版：お気に入いボタン ★ ========== -->
             <div class="mt-6 mb-8">
                 @auth
-                    <form action="{{ route('events.favorite', $event) }}" method="POST" class="inline">
+                    <form action="{{ route('events.favorite', $event) }}" method="POST" class="inline favorite-form">
                         @csrf
-                        @if($isFavorited)
-                            @method('DELETE')
-                        @endif
-                        <button type="submit" class="favorite-button {{ $isFavorited ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600' }} text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="{{ $isFavorited ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <button type="submit" class="favorite-button {{ $isFavorited ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600' }} text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center shadow-md hover:shadow-lg">
+                            <svg class="w-6 h-6 mr-2" fill="{{ $isFavorited ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                             </svg>
-                            <span class="favorite-count">{{ $event->favorites_count }} お気に入り</span>
+                            <span class="favorite-text">{{ $isFavorited ? '💔 お気に入いを解除' : '❤️ お気に入いに追加' }}</span>
+                            <span class="favorite-count ml-2 bg-white bg-opacity-30 px-2 py-1 rounded">{{ $event->favorites_count }}</span>
                         </button>
                     </form>
                 @else
-                    <a href="{{ route('login') }}" class="bg-gray-500 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <a href="{{ route('login') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center shadow-md hover:shadow-lg inline-block">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                         </svg>
-                        ログインしてお気に入りに追加
+                        ログインしてお気に入いに追加
                     </a>
                 @endauth
             </div>
+
             @auth
                 @if($event->user_id === Auth::id())
                     <div class="flex space-x-4 mb-8">
@@ -274,7 +243,7 @@
                 </div>
             </div>
             
-            <!-- レビューセクション（★コメント機能追加版★） -->
+            <!-- レビューセクション -->
             <div class="mt-12">
                 <h2 class="text-3xl font-bold mb-6 text-gray-800 border-b-2 pb-2">口コミ・レビュー</h2>
                 
@@ -455,56 +424,176 @@
             
             <a href="/" class="inline-block mt-8 text-blue-600 hover:text-blue-800 transition duration-300">← イベント一覧に戻る</a>
         </div>
-        <script>
-            function deleteEvent() {
-                'use strict'
-                if (confirm('削除すると復元できません。\n本当に削除しますか？')) {
-                    document.getElementById('delete_form').submit();
+    </div>
+
+    <!-- ========== ★ 修正版JavaScript ★ ========== -->
+    <script>
+        // ★ お気に入いボタンの AJAX 処理
+        document.addEventListener('DOMContentLoaded', function() {
+            const favoriteForm = document.querySelector('.favorite-form');
+            if (favoriteForm) {
+                favoriteForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const url = this.action;
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+                    const favoriteBtn = document.querySelector('.favorite-button');
+                    const favoriteText = document.querySelector('.favorite-text');
+                    const favoriteCount = document.querySelector('.favorite-count');
+                    
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin',
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // ボタンの状態を更新
+                            if (data.isFavorited) {
+                                // お気に入い追加状態
+                                favoriteBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                                favoriteBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+                                favoriteText.textContent = '💔 お気に入いを解除';
+                                favoriteBtn.querySelector('svg').setAttribute('fill', 'currentColor');
+                            } else {
+                                // お気に入い解除状態
+                                favoriteBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                                favoriteBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+                                favoriteText.textContent = '❤️ お気に入いに追加';
+                                favoriteBtn.querySelector('svg').setAttribute('fill', 'none');
+                            }
+                            
+                            // 個数を更新
+                            favoriteCount.textContent = data.favoritesCount;
+                            
+                            // 成功メッセージを表示
+                            showNotification(data.message, 'success');
+                        } else {
+                            showNotification(data.message || 'エラーが発生しました', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('エラーが発生しました', 'error');
+                    });
+                });
+            }
+        });
+
+        /**
+         * 通知メッセージを表示
+         */
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                background-color: ${type === 'success' ? '#10B981' : '#EF4444'};
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                animation: slideIn 0.3s ease-in-out;
+            `;
+
+            document.body.appendChild(notification);
+
+            // 3秒後に削除
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // アニメーション定義
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
                 }
             }
 
-            // コメントセクションの表示/非表示を切り替え
-            function toggleComments(reviewId) {
-                const commentsSection = document.getElementById(`comments-${reviewId}`);
-                commentsSection.classList.toggle('hidden');
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
             }
-        
-            function initMap() {
-                var eventLocation = {
-                    lat: {{ $event->latitude ?? 26.2124 }},
-                    lng: {{ $event->longitude ?? 127.6809 }}
-                };
-        
-                var map = new google.maps.Map(document.getElementById('map'), {
-                    zoom: 15,
-                    center: eventLocation
-                });
-        
-                var marker = new google.maps.Marker({
-                    position: eventLocation,
-                    map: map,
-                    title: '{{ $event->name }}'
-                });
-        
-                var infoWindow = new google.maps.InfoWindow({
-                    content: '<div><strong>{{ $event->name }}</strong><br>{{ $event->address ?? "住所情報がありません" }}</div>'
-                });
-        
-                marker.addListener('click', function() {
-                    infoWindow.open(map, marker);
-                });
+        `;
+        document.head.appendChild(style);
+
+        function deleteEvent() {
+            'use strict'
+            if (confirm('削除すると復元できません。\n本当に削除しますか？')) {
+                document.getElementById('delete_form').submit();
             }
-        
-            function loadMapScript() {
-                var script = document.createElement('script');
-                script.src = 'https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_api_key') }}&callback=initMap';
-                script.async = true;
-                script.defer = true;
-                document.head.appendChild(script);
-            }
-        
-            document.addEventListener('DOMContentLoaded', loadMapScript);
-        </script>
-    </body>
+        }
+
+        // コメントセクションの表示/非表示を切り替え
+        function toggleComments(reviewId) {
+            const commentsSection = document.getElementById(`comments-${reviewId}`);
+            commentsSection.classList.toggle('hidden');
+        }
+
+        function initMap() {
+            var eventLocation = {
+                lat: {{ $event->latitude ?? 26.2124 }},
+                lng: {{ $event->longitude ?? 127.6809 }}
+            };
+
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 15,
+                center: eventLocation
+            });
+
+            var marker = new google.maps.Marker({
+                position: eventLocation,
+                map: map,
+                title: '{{ $event->name }}'
+            });
+
+            var infoWindow = new google.maps.InfoWindow({
+                content: '<div><strong>{{ $event->name }}</strong><br>{{ $event->address ?? "住所情報がありません" }}</div>'
+            });
+
+            marker.addListener('click', function() {
+                infoWindow.open(map, marker);
+            });
+        }
+
+        function loadMapScript() {
+            var script = document.createElement('script');
+            script.src = 'https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_api_key') }}&callback=initMap';
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadMapScript);
+    </script>
 </x-app-layout>
 </html>

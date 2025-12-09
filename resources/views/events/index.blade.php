@@ -243,7 +243,7 @@
 
             <!-- カレンダーセクション -->
             <div class="mb-16">
-                <h2 class="section-title mb-8">カレンダーから探す</h2>
+                <h2 class="section-title mb-8">📅 カレンダーから探す</h2>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
@@ -252,33 +252,21 @@
                     
                     <div class="space-y-6">
                         <div class="bg-white rounded-xl shadow-lg p-6">
-                            <h3 class="font-bold text-lg text-gray-800 mb-4">カテゴリー</h3>
+                            <h3 class="font-bold text-lg text-gray-800 mb-4">📌 イベント種類</h3>
                             <div class="space-y-2 text-sm">
                                 <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                                    <div class="w-3 h-3 rounded" style="background-color: #FF6B6B;"></div>
-                                    <span class="text-gray-700">祭り</span>
-                                </div>
-                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
                                     <div class="w-3 h-3 rounded" style="background-color: #4ECDC4;"></div>
-                                    <span class="text-gray-700">音楽イベント</span>
+                                    <span class="text-gray-700">🎪 webアプリイベント</span>
                                 </div>
                                 <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                                    <div class="w-3 h-3 rounded" style="background-color: #FFD93D;"></div>
-                                    <span class="text-gray-700">展示会</span>
-                                </div>
-                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                                    <div class="w-3 h-3 rounded" style="background-color: #6BCB77;"></div>
-                                    <span class="text-gray-700">スポーツイベント</span>
-                                </div>
-                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                                    <div class="w-3 h-3 rounded" style="background-color: #9D84B7;"></div>
-                                    <span class="text-gray-700">式典</span>
+                                    <div class="w-3 h-3 rounded" style="background-color: #FF6B6B;"></div>
+                                    <span class="text-gray-700">❤️ お気に入いイベント</span>
                                 </div>
                                 @auth
-                                    <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 border-t mt-3 pt-3">
-                                        <div class="w-3 h-3 rounded" style="background-color: #FF8C00;"></div>
-                                        <span class="text-gray-700 font-semibold">⭐ お気に入り</span>
-                                    </div>
+                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 border-t mt-3 pt-3">
+                                    <div class="w-3 h-3 rounded" style="background-color: #FF8C00;"></div>
+                                    <span class="text-gray-700 font-semibold">📅 Google Calendar</span>
+                                </div>
                                 @endauth
                             </div>
                         </div>
@@ -295,16 +283,16 @@
                 </div>
             </div>
             
-            <!-- Google Calendar セクション（カレンダーの下に配置） -->
+            <!-- Google Calendar セクション -->
             <div class="mb-16">
-                <h2 class="section-title mb-8">Google カレンダーと連携</h2>
+                <h2 class="section-title mb-8">🔗 Google カレンダーと連携</h2>
                 
                 <div class="bg-white rounded-xl shadow-lg p-8">
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h3 class="text-2xl font-bold text-gray-800 mb-2">お気に入りイベントを自動登録</h3>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-2">個人用 Google Calendar を表示</h3>
                             <p class="text-gray-600">
-                                お気に入り登録したイベントが自動的にGoogle カレンダーに追加されます
+                                Google Calendar に登録された個人的な用事やスケジュールがこのカレンダーに表示されます
                             </p>
                         </div>
                         <div id="calendarStatus" class="text-center">
@@ -324,7 +312,7 @@
                                         未接続
                                     </div>
                                     <a href="{{ route('google-calendar.authenticate') }}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold inline-block">
-                                        🔗 Google カレンダーに接続
+                                        🔗 Google と接続
                                     </a>
                                 @endif
                             @else
@@ -339,10 +327,10 @@
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <h4 class="font-bold text-blue-800 mb-2">📌 使い方</h4>
                         <ul class="text-blue-700 text-sm space-y-1">
-                            <li>1. 「Google カレンダーに接続」ボタンをクリック</li>
-                            <li>2. Googleアカウントでログイン</li>
-                            <li>3. 以降、お気に入り登録したイベントが自動的にGoogle カレンダーに追加されます</li>
-                            <li>4. お気に入りから削除するとGoogle カレンダーからも削除されます</li>
+                            <li>✅ 1. 「Google と接続」ボタンをクリック</li>
+                            <li>✅ 2. Googleアカウントでログイン</li>
+                            <li>✅ 3. Google Calendar の個人的な用事がこのカレンダーに表示されます（📅 オレンジ色）</li>
+                            <li>✅ 4. イベントを見つけるときに個人スケジュールも確認できます</li>
                         </ul>
                     </div>
                 </div>
@@ -350,7 +338,7 @@
 
             <!-- 最新のイベント -->
             <div class="mb-16">
-                <h2 class="section-title mb-8">最新のイベント</h2>
+                <h2 class="section-title mb-8">🆕 最新のイベント</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @foreach($latestEvents as $event)
                         <div class="event-card rounded-xl overflow-hidden shadow-lg">
@@ -388,7 +376,7 @@
 
             <!-- 人気のイベント -->
             <div class="mb-16">
-                <h2 class="section-title mb-8">人気のイベント</h2>
+                <h2 class="section-title mb-8">⭐ 人気のイベント</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @foreach($popularEvents as $event)
                         <div class="event-card rounded-xl overflow-hidden shadow-lg">
@@ -438,11 +426,14 @@
                         right: 'dayGridMonth,dayGridWeek'
                     },
                     height: 'auto',
+                    // ★修正★ webアプリイベント取得
                     events: {
                         url: '{{ route("calendar.getEvents") }}',
                     },
                     eventClick: function(info) {
-                        window.location.href = info.event.url;
+                        if (info.event.url) {
+                            window.location.href = info.event.url;
+                        }
                     },
                     dateClick: function(info) {
                         loadEventsForDate(info.dateStr);
@@ -464,7 +455,11 @@
                 
                 document.getElementById('selectedDate').textContent = formattedDate;
 
-                fetch(`{{ route("calendar.getEventsByDate") }}?date=${dateStr}`)
+                const startDateTime = new Date(dateStr + 'T00:00:00').toISOString();
+                const endDateTime = new Date(dateStr + 'T23:59:59').toISOString();
+
+                // webアプリイベント取得
+                fetch(`{{ route("calendar.getEvents") }}?start=${startDateTime}&end=${endDateTime}`)
                     .then(response => response.json())
                     .then(events => {
                         const eventsList = document.getElementById('eventsList');
@@ -475,15 +470,15 @@
                         }
 
                         eventsList.innerHTML = events.map(event => `
-                            <div class="border-l-4 bg-gradient-to-r from-gray-50 to-transparent p-3 rounded-r hover:shadow-md transition">
+                            <div class="border-l-4 border-blue-500 bg-gradient-to-r from-gray-50 to-transparent p-3 rounded-r hover:shadow-md transition">
                                 <h4 class="font-bold text-sm text-gray-800 mb-1">
                                     <a href="/events/${event.id}" class="text-blue-600 hover:text-blue-800 transition">
-                                        ${event.name}
+                                        ${event.title}
                                     </a>
                                 </h4>
-                                <p class="text-xs text-gray-600">${event.category ? event.category.name : 'N/A'}</p>
-                                <p class="text-xs text-gray-600">📍 ${event.location || '場所未定'}</p>
-                                <p class="text-xs text-gray-600">🕐 ${formatTime(event.start_date)}</p>
+                                <p class="text-xs text-gray-600">${event.extendedProps?.category || 'N/A'}</p>
+                                <p class="text-xs text-gray-600">📍 ${event.extendedProps?.location || '場所未定'}</p>
+                                <p class="text-xs text-gray-600">🕐 ${formatTime(event.start)}</p>
                             </div>
                         `).join('');
                     })
