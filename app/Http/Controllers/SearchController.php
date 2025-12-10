@@ -50,8 +50,10 @@ class SearchController extends Controller
         }
 
         $events = $events->with('category')
+                         ->withAvg('reviews', 'rating')
+                         ->withCount('reviews')
                          ->latest('start_date')
-                         ->paginate(10);
+                         ->paginate(12);
 
         return view('search_results', compact('events', 'timeFilters'));
     }

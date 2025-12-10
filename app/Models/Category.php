@@ -13,8 +13,13 @@ class Category extends Model
     {
         return $this->hasMany(Event::class);  
     }
-    public function getByCategory(int $limit_count = 5)
+    public function getByCategory(int $limit_count = 12)
     {
-    return $this->events()->with('category')->orderBy('updated_at', 'DESC')->paginate($limit_count);
+        return $this->events()
+            ->with('category')
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->orderBy('updated_at', 'DESC')
+            ->paginate($limit_count);
     }
 }
