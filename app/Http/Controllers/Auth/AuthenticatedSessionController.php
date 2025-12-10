@@ -29,7 +29,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+        // ログイン成功メッセージを追加
+        $username = Auth::user()->name ?? 'ユーザー';
+
+        return redirect()->intended(RouteServiceProvider::HOME)
+            ->with('success', "ログインに成功しました！ようこそ、{$username}さん！");
     }
 
     /**
