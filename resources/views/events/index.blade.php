@@ -212,9 +212,13 @@
                                         <div class="flex items-center gap-1">
                                             <span class="rating-stars">★</span>
                                             <span class="text-sm font-semibold text-gray-700">
-                                                {{ number_format($event->reviews_avg_rating, 1) }}
+                                                @if($event->reviews_avg_rating)
+                                                    {{ number_format($event->reviews_avg_rating, 1) }}
+                                                @else
+                                                    <span class="text-gray-400">-</span>
+                                                @endif
                                             </span>
-                                            <span class="text-xs text-gray-500">({{ $event->reviews_count }})</span>
+                                            <span class="text-xs text-gray-500">({{ $event->reviews_count ?? 0 }})</span>
                                         </div>
                                     </div>
 
@@ -407,7 +411,14 @@
                                     <span class="category-tag bg-purple-100 text-purple-700">{{ $event->category->name }}</span>
                                     <div class="flex items-center gap-1">
                                         <span class="rating-stars">★</span>
-                                        <span class="text-sm font-semibold">{{ number_format($event->reviews_avg_rating, 1) }}</span>
+                                        <span class="text-sm font-semibold">
+                                            @if($event->reviews_avg_rating)
+                                                {{ number_format($event->reviews_avg_rating, 1) }}
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </span>
+                                        <span class="text-xs text-gray-500">({{ $event->reviews_count ?? 0 }})</span>
                                     </div>
                                 </div>
                                 <p class="text-sm text-gray-600 line-clamp-2 mb-4">{{ $event->overview }}</p>
@@ -445,7 +456,14 @@
                                     <span class="category-tag bg-pink-100 text-pink-700">{{ $event->category->name }}</span>
                                     <div class="flex items-center gap-1">
                                         <span class="rating-stars">★</span>
-                                        <span class="text-sm font-semibold">{{ number_format($event->reviews_avg_rating, 1) }}</span>
+                                        <span class="text-sm font-semibold">
+                                            @if($event->reviews_avg_rating)
+                                                {{ number_format($event->reviews_avg_rating, 1) }}
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </span>
+                                        <span class="text-xs text-gray-500">({{ $event->reviews_count ?? 0 }})</span>
                                     </div>
                                 </div>
                                 <p class="text-sm text-gray-600 line-clamp-2 mb-4">{{ $event->overview }}</p>

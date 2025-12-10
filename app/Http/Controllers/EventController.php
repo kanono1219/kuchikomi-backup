@@ -148,6 +148,8 @@ class EventController extends Controller
             $tomorrow = Carbon::now()->addDay()->endOfDay();
 
             $query = Event::with('category')
+                ->withAvg('reviews', 'rating')
+                ->withCount('reviews')
                 ->where('deleted_at', null)
                 ->whereBetween('start_date', [$today, $tomorrow]);
 
@@ -185,6 +187,8 @@ class EventController extends Controller
     {
         try {
             return Event::with('category')
+                ->withAvg('reviews', 'rating')
+                ->withCount('reviews')
                 ->where('deleted_at', null)
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
@@ -205,6 +209,8 @@ class EventController extends Controller
     {
         try {
             return Event::with('category')
+                ->withAvg('reviews', 'rating')
+                ->withCount('reviews')
                 ->where('deleted_at', null)
                 ->orderByDesc('reviews_avg_rating')
                 ->orderByDesc('reviews_count')
@@ -226,6 +232,8 @@ class EventController extends Controller
     {
         try {
             $events = Event::with('category')
+                ->withAvg('reviews', 'rating')
+                ->withCount('reviews')
                 ->where('deleted_at', null)
                 ->paginate(12);
 
@@ -249,7 +257,11 @@ class EventController extends Controller
 
             // エラーが発生してもデフォルト値で表示
             return view('events.index', [
-                'events' => Event::with('category')->where('deleted_at', null)->paginate(12),
+                'events' => Event::with('category')
+                    ->withAvg('reviews', 'rating')
+                    ->withCount('reviews')
+                    ->where('deleted_at', null)
+                    ->paginate(12),
                 'weatherData' => $this->getDefaultWeatherData(),
                 'recommendedEvents' => collect(),
                 'latestEvents' => collect(),
