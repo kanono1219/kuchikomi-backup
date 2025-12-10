@@ -195,28 +195,66 @@
                         debugLog('開始日', info.start.toISOString());
                         debugLog('終了日', info.end.toISOString());
 
-                        // webアプリ側のイベントを取得
-                        const url = `/calendar/events?start=${info.start.toISOString()}&end=${info.end.toISOString()}`;
-                        debugLog('API URL', url);
+                        const allEvents = [];
 
-                        const response = await fetch(url);
-                        debugLog('API レスポンスステータス', response.status);
+                        // 1. webアプリ側のイベントを取得
+                        const appUrl = `/calendar/events?start=${info.start.toISOString()}&end=${info.end.toISOString()}`;
+                        debugLog('アプリイベントAPI URL', appUrl);
 
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
+                        const appResponse = await fetch(appUrl);
+                        debugLog('アプリイベントレスポンスステータス', appResponse.status);
+
+                        if (!appResponse.ok) {
+                            throw new Error(`HTTP error! status: ${appResponse.status}`);
                         }
 
-                        const events = await response.json();
-                        debugLog('取得したイベント数', events.length);
-                        debugLog('イベント詳細', events);
+                        const appEvents = await appResponse.json();
+                        debugLog('アプリイベント取得数', appEvents.length);
+                        allEvents.push(...appEvents);
 
-                        if (events.length === 0) {
+                        // 2. Google Calendar イベントを取得（認証済みユーザーのみ）
+                        @auth
+                        try {
+                            const googleUrl = `/calendar/google-events?start=${info.start.toISOString()}&end=${info.end.toISOString()}`;
+                            debugLog('GoogleカレンダーAPI URL', googleUrl);
+
+                            const googleResponse = await fetch(googleUrl, {
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                }
+                            });
+                            debugLog('Googleカレンダーレスポンスステータス', googleResponse.status);
+
+                            if (googleResponse.ok) {
+                                const googleData = await googleResponse.json();
+
+                                // レスポンスが配列の場合とオブジェクトの場合を処理
+                                const googleEvents = Array.isArray(googleData) ? googleData : (googleData.events || []);
+
+                                debugLog('Googleカレンダーイベント取得数', googleEvents.length);
+                                if (googleEvents.length > 0) {
+                                    allEvents.push(...googleEvents);
+                                    debugLog('✅ Googleカレンダーイベント取得成功');
+                                }
+                            } else {
+                                debugLog('⚠️ Googleカレンダーイベント取得スキップ (未接続またはエラー)');
+                            }
+                        } catch (googleError) {
+                            debugError('Googleカレンダーイベント取得エラー (スキップ)', googleError);
+                            // Google Calendar エラーは無視して続行
+                        }
+                        @endauth
+
+                        debugLog('合計イベント数', allEvents.length);
+                        debugLog('全イベント詳細', allEvents);
+
+                        if (allEvents.length === 0) {
                             debugLog('⚠️ イベントが見つかりません');
                         } else {
                             debugLog('✅ イベント取得成功');
                         }
 
-                        successCallback(events);
+                        successCallback(allEvents);
 
                     } catch (error) {
                         debugError('イベント取得エラー', error);
@@ -262,12 +300,12 @@
         /**
          * 指定した日付のイベント一覧を表示
          */
-        function loadEventsForDate(dateStr) {
+        async function loadEventsForDate(dateStr) {
             try {
                 const date = new Date(dateStr + 'T00:00:00');
                 const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
                 const formattedDate = date.toLocaleDateString('ja-JP', options);
-                
+
                 debugLog('日付別イベント取得', dateStr);
                 document.getElementById('selectedDate').textContent = formattedDate;
 
@@ -275,68 +313,113 @@
                 const startDateTime = new Date(dateStr + 'T00:00:00').toISOString();
                 const endDateTime = new Date(dateStr + 'T23:59:59').toISOString();
 
-                const url = `/calendar/events?start=${startDateTime}&end=${endDateTime}`;
-                debugLog('日付別API URL', url);
+                const allEvents = [];
 
-                fetch(url)
-                    .then(response => {
-                        debugLog('日付別レスポンスステータス', response.status);
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
+                // 1. webアプリのイベント取得
+                const appUrl = `/calendar/events?start=${startDateTime}&end=${endDateTime}`;
+                debugLog('日付別アプリAPI URL', appUrl);
+
+                try {
+                    const appResponse = await fetch(appUrl);
+                    debugLog('日付別アプリレスポンスステータス', appResponse.status);
+                    if (appResponse.ok) {
+                        const appEvents = await appResponse.json();
+                        debugLog('日付別アプリイベント取得完了', appEvents.length);
+                        allEvents.push(...appEvents);
+                    }
+                } catch (error) {
+                    debugError('日付別アプリイベント取得エラー', error);
+                }
+
+                // 2. Googleカレンダーのイベント取得（認証済みユーザーのみ）
+                @auth
+                try {
+                    const googleUrl = `/calendar/google-events?start=${startDateTime}&end=${endDateTime}`;
+                    debugLog('日付別GoogleカレンダーAPI URL', googleUrl);
+
+                    const googleResponse = await fetch(googleUrl, {
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                         }
-                        return response.json();
-                    })
-                    .then(events => {
-                        debugLog('日付別イベント取得完了', events.length);
-                        const eventsList = document.getElementById('eventsList');
-                        
-                        if (events.length === 0) {
-                            eventsList.innerHTML = `
-                                <div class="text-center py-8">
-                                    <p class="text-gray-500 text-lg">この日付はイベントがありません</p>
-                                </div>
-                            `;
-                            return;
-                        }
-
-                        // イベント一覧を構築
-                        eventsList.innerHTML = events.map(event => {
-                            const startTime = new Date(event.start).toLocaleTimeString('ja-JP', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            });
-
-                            return `
-                                <div class="border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r hover:shadow-md transition cursor-pointer" onclick="navigateToEvent('${event.url}')">
-                                    <h4 class="font-bold text-lg text-gray-800 mb-2">
-                                        ${event.title}
-                                    </h4>
-                                    <div class="space-y-1 text-sm text-gray-600">
-                                        ${event.extendedProps?.category ? `<p>カテゴリー: ${event.extendedProps.category}</p>` : ''}
-                                        <p>🕐 時間: ${startTime}</p>
-                                        <p>📍 場所: ${event.extendedProps?.location || '未定'}</p>
-                                    </div>
-                                    <div class="mt-3">
-                                        <a href="${event.url}" class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
-                                            詳細を見る →
-                                        </a>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('');
-                    })
-                    .catch(error => {
-                        debugError('日付別イベント取得エラー', error);
-                        const eventsList = document.getElementById('eventsList');
-                        eventsList.innerHTML = `
-                            <div class="text-center py-8">
-                                <p class="text-red-500 text-lg">エラーが発生しました</p>
-                                <p class="text-gray-400 text-sm mt-2">${error.message}</p>
-                            </div>
-                        `;
                     });
+                    debugLog('日付別Googleカレンダーレスポンスステータス', googleResponse.status);
+
+                    if (googleResponse.ok) {
+                        const googleData = await googleResponse.json();
+                        const googleEvents = Array.isArray(googleData) ? googleData : (googleData.events || []);
+                        debugLog('日付別Googleカレンダーイベント取得完了', googleEvents.length);
+                        if (googleEvents.length > 0) {
+                            allEvents.push(...googleEvents);
+                        }
+                    }
+                } catch (error) {
+                    debugError('日付別Googleカレンダーイベント取得エラー (スキップ)', error);
+                }
+                @endauth
+
+                debugLog('日付別合計イベント数', allEvents.length);
+                const eventsList = document.getElementById('eventsList');
+
+                if (allEvents.length === 0) {
+                    eventsList.innerHTML = `
+                        <div class="text-center py-8">
+                            <p class="text-gray-500 text-lg">この日付はイベントがありません</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // イベント一覧を構築
+                eventsList.innerHTML = allEvents.map(event => {
+                    const startTime = new Date(event.start).toLocaleTimeString('ja-JP', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    // イベントタイプによって色を変更
+                    const borderColor = event.extendedProps?.type === 'google_calendar' ? 'border-orange-500' :
+                                      (event.extendedProps?.isFavorited ? 'border-red-500' : 'border-blue-500');
+                    const bgColor = event.extendedProps?.type === 'google_calendar' ? 'bg-orange-50' :
+                                   (event.extendedProps?.isFavorited ? 'bg-red-50' : 'bg-blue-50');
+                    const badge = event.extendedProps?.type === 'google_calendar' ?
+                                 '<span class="inline-block bg-orange-500 text-white text-xs px-2 py-1 rounded mb-2">Googleカレンダー</span>' : '';
+
+                    // Googleカレンダーイベントの場合はリンクなし
+                    const clickHandler = event.url ? `onclick="navigateToEvent('${event.url}')"` : '';
+                    const detailLink = event.url ? `
+                        <div class="mt-3">
+                            <a href="${event.url}" class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                                詳細を見る →
+                            </a>
+                        </div>
+                    ` : '';
+
+                    return `
+                        <div class="border-l-4 ${borderColor} ${bgColor} p-4 rounded-r hover:shadow-md transition ${event.url ? 'cursor-pointer' : ''}" ${clickHandler}>
+                            ${badge}
+                            <h4 class="font-bold text-lg text-gray-800 mb-2">
+                                ${event.title}
+                            </h4>
+                            <div class="space-y-1 text-sm text-gray-600">
+                                ${event.extendedProps?.category ? `<p>📂 カテゴリー: ${event.extendedProps.category}</p>` : ''}
+                                <p>🕐 時間: ${startTime}</p>
+                                <p>📍 場所: ${event.extendedProps?.location || '未定'}</p>
+                                ${event.extendedProps?.description ? `<p class="mt-2 text-gray-500">${event.extendedProps.description.substring(0, 100)}${event.extendedProps.description.length > 100 ? '...' : ''}</p>` : ''}
+                            </div>
+                            ${detailLink}
+                        </div>
+                    `;
+                }).join('');
+
             } catch (error) {
                 debugError('日付処理エラー', error);
+                const eventsList = document.getElementById('eventsList');
+                eventsList.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-red-500 text-lg">エラーが発生しました</p>
+                        <p class="text-gray-400 text-sm mt-2">${error.message}</p>
+                    </div>
+                `;
             }
         }
 
