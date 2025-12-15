@@ -11,9 +11,9 @@ class Event extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'name', 
+        'name',
         'overview',
-        'category_id', 
+        'category_id',
         'location',
         'address',
         'latitude',
@@ -22,6 +22,7 @@ class Event extends Model
         'end_date',
         'image_url',
         'external_url',
+        'google_calendar_event_id',
         'user_id',
         'venue_type',
     ];

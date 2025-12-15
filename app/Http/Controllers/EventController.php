@@ -589,7 +589,7 @@ class EventController extends Controller
 
             // toggle() でお気に入い状態を切り替え
             $toggleResult = $user->favoriteEvents()->toggle($event->id);
-            
+
             // toggle() の戻り値を解析
             $wasFavorited = !empty($toggleResult['attached']);
 
@@ -599,10 +599,55 @@ class EventController extends Controller
                 'is_favorited' => $wasFavorited
             ]);
 
+            // Googleカレンダーに自動追加/削除
+            $googleCalendarMessage = '';
+            if ($user->google_calendar_connected && $user->google_calendar_token) {
+                try {
+                    if ($wasFavorited) {
+                        // お気に入り追加時：Googleカレンダーにも追加
+                        $googleCalendarController = new GoogleCalendarController();
+                        $response = $googleCalendarController->addEventToCalendar($event);
+                        $responseData = $response->getData();
+
+                        if ($responseData->success ?? false) {
+                            $googleCalendarMessage = ' & Googleカレンダーに追加されました';
+                            Log::info('Event auto-added to Google Calendar', [
+                                'event_id' => $event->id,
+                                'user_id' => $user->id
+                            ]);
+                        }
+                    } else {
+                        // お気に入り削除時：Googleカレンダーからも削除
+                        if ($event->google_calendar_event_id) {
+                            $googleCalendarController = new GoogleCalendarController();
+                            $response = $googleCalendarController->removeEventFromCalendar($event);
+                            $responseData = $response->getData();
+
+                            if ($responseData->success ?? false) {
+                                $googleCalendarMessage = ' & Googleカレンダーから削除されました';
+                                Log::info('Event auto-removed from Google Calendar', [
+                                    'event_id' => $event->id,
+                                    'user_id' => $user->id
+                                ]);
+                            }
+                        }
+                    }
+                } catch (Exception $e) {
+                    Log::warning('Google Calendar auto-sync failed', [
+                        'event_id' => $event->id,
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage()
+                    ]);
+                    // Googleカレンダー連携のエラーは無視（お気に入り自体は成功）
+                }
+            }
+
             // 最新のお気に入い数を取得
             $favoritesCount = $event->favorites()->count();
 
-            $message = $wasFavorited ? '❤️ お気に入いに追加しました' : '💔 お気に入いから削除しました';
+            $message = $wasFavorited
+                ? '❤️ お気に入いに追加しました' . $googleCalendarMessage
+                : '💔 お気に入いから削除しました' . $googleCalendarMessage;
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
