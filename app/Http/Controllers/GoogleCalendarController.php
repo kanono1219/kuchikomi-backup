@@ -615,4 +615,145 @@ class GoogleCalendarController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Google Calendar のイベントを自動同期（新しいイベントのみインポート）
+     */
+    public function autoSync()
+    {
+        try {
+            $user = Auth::user();
+
+            // Google Calendar に接続しているか確認
+            if (!$user || !$user->google_calendar_connected || !$user->google_calendar_token) {
+                return [
+                    'success' => false,
+                    'message' => 'Google カレンダーに接続していません',
+                    'imported_count' => 0,
+                ];
+            }
+
+            Log::info('Auto-syncing events from Google Calendar for user: ' . $user->id);
+
+            // トークンを設定
+            $tokenData = json_decode($user->google_calendar_token, true);
+            $this->client->setAccessToken($tokenData);
+
+            // トークンが期限切れの場合は更新
+            if ($this->client->isAccessTokenExpired()) {
+                $refreshToken = $tokenData['refresh_token'] ?? null;
+                if ($refreshToken) {
+                    $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
+                    $newToken = $this->client->getAccessToken();
+                    DB::table('users')
+                        ->where('id', $user->id)
+                        ->update(['google_calendar_token' => json_encode($newToken)]);
+                }
+            }
+
+            // Google Calendar API を初期化
+            $service = new Calendar($this->client);
+
+            // 今日から3ヶ月後までのイベントを取得
+            $timeMin = new \DateTime('now', new \DateTimeZone('Asia/Tokyo'));
+            $timeMax = new \DateTime('+3 months', new \DateTimeZone('Asia/Tokyo'));
+
+            $optParams = [
+                'maxResults' => 100,
+                'orderBy' => 'startTime',
+                'singleEvents' => true,
+                'timeMin' => $timeMin->format(\DateTime::RFC3339),
+                'timeMax' => $timeMax->format(\DateTime::RFC3339),
+            ];
+
+            $results = $service->events->listEvents('primary', $optParams);
+            $googleEvents = $results->getItems();
+
+            Log::info('Fetched ' . count($googleEvents) . ' events from Google Calendar for auto-sync');
+
+            $importedCount = 0;
+
+            foreach ($googleEvents as $googleEvent) {
+                $googleEventId = $googleEvent->getId();
+
+                // 既にインポート済みか確認
+                $existingEvent = Event::where('google_calendar_event_id', $googleEventId)
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if ($existingEvent) {
+                    continue; // 既にインポート済みならスキップ
+                }
+
+                try {
+                    // 開始日時と終了日時を取得
+                    $startDateTime = $googleEvent->getStart()->getDateTime();
+                    $endDateTime = $googleEvent->getEnd()->getDateTime();
+
+                    // 終日イベントの場合は日付のみ
+                    if (!$startDateTime) {
+                        $startDateTime = $googleEvent->getStart()->getDate() . ' 00:00:00';
+                    }
+                    if (!$endDateTime) {
+                        $endDateTime = $googleEvent->getEnd()->getDate() . ' 23:59:59';
+                    }
+
+                    // ローカルDBにイベントを作成
+                    $event = Event::create([
+                        'name' => $googleEvent->getSummary() ?: 'Googleカレンダーからのイベント',
+                        'overview' => $googleEvent->getDescription() ?: '',
+                        'category_id' => 1, // デフォルトカテゴリ
+                        'location' => $googleEvent->getLocation() ?: '未設定',
+                        'start_date' => $startDateTime,
+                        'end_date' => $endDateTime,
+                        'user_id' => $user->id,
+                        'google_calendar_event_id' => $googleEventId,
+                    ]);
+
+                    // お気に入りに自動追加
+                    $user->favoriteEvents()->attach($event->id);
+
+                    $importedCount++;
+
+                    Log::info('Event auto-imported from Google Calendar', [
+                        'event_id' => $event->id,
+                        'google_event_id' => $googleEventId
+                    ]);
+                } catch (Exception $e) {
+                    Log::warning('Failed to auto-import event', [
+                        'google_event_id' => $googleEventId,
+                        'error' => $e->getMessage()
+                    ]);
+                    // エラーがあってもスキップして次のイベントへ
+                    continue;
+                }
+            }
+
+            Log::info('Auto-sync completed', [
+                'user_id' => $user->id,
+                'imported_count' => $importedCount
+            ]);
+
+            return [
+                'success' => true,
+                'message' => $importedCount > 0
+                    ? "{$importedCount}件の新しいイベントをインポートしました"
+                    : '新しいイベントはありませんでした',
+                'imported_count' => $importedCount,
+            ];
+
+        } catch (Exception $e) {
+            Log::error('Failed to auto-sync Google Calendar', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'エラーが発生しました: ' . $e->getMessage(),
+                'imported_count' => 0,
+            ];
+        }
+    }
 }

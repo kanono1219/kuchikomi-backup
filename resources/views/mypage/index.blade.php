@@ -8,6 +8,19 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- メッセージ表示 -->
+            @if (session('success'))
+                <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{ session('success') }}</span>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{ session('error') }}</span>
+                </div>
+            @endif
+
             <!-- 通知設定セクション -->
             <div class="bg-white overflow-hidden shadow-lg rounded-xl mb-8">
                 <div class="p-6">
@@ -85,7 +98,11 @@
                                 </svg>
                                 <span class="text-green-800 font-medium">Google Calendarに接続済み</span>
                             </div>
-                            <p class="text-sm text-green-700 mt-2">お気に入りしたイベントは自動的にGoogleカレンダーに追加されます。</p>
+                            <ul class="text-sm text-green-700 mt-2 list-disc list-inside space-y-1">
+                                <li>お気に入りしたイベントは自動的にGoogleカレンダーに追加されます</li>
+                                <li>Googleカレンダーの新しいイベントは自動的にインポートされます</li>
+                                <li>マイページを開くたびに自動同期が実行されます</li>
+                            </ul>
                         </div>
 
                         <div class="flex space-x-4">
@@ -94,7 +111,7 @@
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
-                                Googleカレンダーからイベントをインポート
+                                イベント一覧を表示（手動インポート）
                             </a>
 
                             <form action="{{ route('google-calendar.disconnect') }}" method="POST" class="inline">
@@ -108,10 +125,11 @@
                         </div>
                     @else
                         <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-                            <p class="text-gray-700 mb-2">Google Calendarと連携して、お気に入りイベントを自動的にカレンダーに追加できます。</p>
+                            <p class="text-gray-700 mb-2 font-semibold">Google Calendarと連携して、イベントを自動的に同期できます。</p>
                             <ul class="text-sm text-gray-600 list-disc list-inside space-y-1">
                                 <li>お気に入りに追加すると自動的にGoogleカレンダーに登録</li>
-                                <li>Googleカレンダーのイベントをこのアプリにインポート</li>
+                                <li>Googleカレンダーの新しいイベントを自動的にインポート</li>
+                                <li>マイページを開くたびに自動同期が実行されます</li>
                                 <li>すべてのデバイスでイベントを同期</li>
                             </ul>
                         </div>
