@@ -20,6 +20,7 @@ class CategorySeeder extends Seeder
             ['name' => '展示会', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'スポーツイベント', 'created_at' => now(), 'updated_at' => now()],
             ['name' => '式典', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'RSS配信', 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

@@ -66,7 +66,7 @@ class RssImporterController extends Controller
     {
         $events = [];
         $categories = Category::pluck('id', 'name');
-        $defaultCategoryId = $categories->get('その他', 1);
+        $defaultCategoryId = $categories->get('RSS配信', $categories->get('その他', 1));
 
         try {
             if (isset($xml->channel->item)) {
@@ -79,9 +79,57 @@ class RssImporterController extends Controller
                         continue;
                     }
 
+                    // 場所情報の抽出
+                    $location = 'オンライン';
+                    $address = '';
+                    $latitude = 26.2124;
+                    $longitude = 127.6809;
+
+                    // ev:location タグから場所を取得
+                    if (isset($item->children('ev', true)->location)) {
+                        $location = trim((string)$item->children('ev', true)->location);
+                    }
+
+                    // geo:lat, geo:long から位置情報を取得
+                    if (isset($item->children('geo', true)->lat)) {
+                        $latitude = (float)$item->children('geo', true)->lat;
+                    }
+                    if (isset($item->children('geo', true)->long)) {
+                        $longitude = (float)$item->children('geo', true)->long;
+                    }
+
+                    // description から場所情報を抽出
+                    $plainDescription = strip_tags($description);
+                    if (preg_match('/(?:場所|会場|開催地)[:：]\s*([^\n]+)/u', $plainDescription, $matches)) {
+                        $extractedLocation = trim($matches[1]);
+                        if (!empty($extractedLocation)) {
+                            $location = mb_substr($extractedLocation, 0, 255);
+                        }
+                    }
+
+                    // 日時情報の抽出
                     $startDate = Carbon::now();
-                    
-                    if (!empty($item->pubDate)) {
+                    $endDate = null;
+
+                    // ev:startdate, ev:enddate から日時を取得
+                    if (isset($item->children('ev', true)->startdate)) {
+                        try {
+                            $startDate = Carbon::parse((string)$item->children('ev', true)->startdate);
+                        } catch (\Exception $e) {
+                            \Log::warning('Failed to parse ev:startdate: ' . $e->getMessage());
+                        }
+                    }
+
+                    if (isset($item->children('ev', true)->enddate)) {
+                        try {
+                            $endDate = Carbon::parse((string)$item->children('ev', true)->enddate);
+                        } catch (\Exception $e) {
+                            \Log::warning('Failed to parse ev:enddate: ' . $e->getMessage());
+                        }
+                    }
+
+                    // pubDateから日時を取得
+                    if (!empty($item->pubDate) && !isset($item->children('ev', true)->startdate)) {
                         try {
                             $startDate = Carbon::createFromFormat('D, d M Y H:i:s O', (string)$item->pubDate);
                         } catch (\Exception $e) {
@@ -93,7 +141,29 @@ class RssImporterController extends Controller
                         }
                     }
 
-                    $endDate = $startDate->copy()->addHours(2);
+                    // description から日時を抽出
+                    if (preg_match('/(\d{4})年(\d{1,2})月(\d{1,2})日/', $plainDescription, $dateMatches)) {
+                        try {
+                            $extractedDate = Carbon::create($dateMatches[1], $dateMatches[2], $dateMatches[3]);
+                            if (preg_match('/(\d{1,2}):(\d{2})/', $plainDescription, $timeMatches)) {
+                                $extractedDate->setTime($timeMatches[1], $timeMatches[2]);
+                            }
+                            $startDate = $extractedDate;
+                        } catch (\Exception $e) {
+                            // エラーは無視
+                        }
+                    }
+
+                    // 終了日時が設定されていない場合
+                    if (!$endDate) {
+                        $endDate = $startDate->copy()->addHours(2);
+                    }
+
+                    // venue_typeの判定
+                    $venueType = 'indoor';
+                    if (stripos($location, '屋外') !== false || stripos($location, '公園') !== false) {
+                        $venueType = 'outdoor';
+                    }
 
                     $events[] = [
                         'name' => mb_substr($title, 0, 255),
@@ -102,8 +172,11 @@ class RssImporterController extends Controller
                         'start_date' => $startDate->format('Y-m-d H:i:s'),
                         'end_date' => $endDate->format('Y-m-d H:i:s'),
                         'category_id' => $defaultCategoryId,
-                        'location' => 'イベント会場',
-                        'venue_type' => 'indoor',
+                        'location' => $location,
+                        'address' => $address,
+                        'latitude' => $latitude,
+                        'longitude' => $longitude,
+                        'venue_type' => $venueType,
                     ];
 
                     if (count($events) >= 20) {
@@ -122,7 +195,7 @@ class RssImporterController extends Controller
     {
         $events = [];
         $categories = Category::pluck('id', 'name');
-        $defaultCategoryId = $categories->get('その他', 1);
+        $defaultCategoryId = $categories->get('RSS配信', $categories->get('その他', 1));
 
         try {
             if (isset($xml->entry)) {
@@ -146,8 +219,24 @@ class RssImporterController extends Controller
                         }
                     }
 
+                    // 場所情報の抽出
+                    $location = 'オンライン';
+                    $address = '';
+                    $latitude = 26.2124;
+                    $longitude = 127.6809;
+
+                    $plainContent = strip_tags($content);
+                    if (preg_match('/(?:場所|会場|開催地)[:：]\s*([^\n]+)/u', $plainContent, $matches)) {
+                        $extractedLocation = trim($matches[1]);
+                        if (!empty($extractedLocation)) {
+                            $location = mb_substr($extractedLocation, 0, 255);
+                        }
+                    }
+
+                    // 日時情報の抽出
                     $startDate = Carbon::now();
-                    
+                    $endDate = null;
+
                     if (!empty($entry->published)) {
                         try {
                             $startDate = Carbon::parse((string)$entry->published);
@@ -156,17 +245,41 @@ class RssImporterController extends Controller
                         }
                     }
 
-                    $endDate = $startDate->copy()->addHours(2);
+                    // contentから日時を抽出
+                    if (preg_match('/(\d{4})年(\d{1,2})月(\d{1,2})日/', $plainContent, $dateMatches)) {
+                        try {
+                            $extractedDate = Carbon::create($dateMatches[1], $dateMatches[2], $dateMatches[3]);
+                            if (preg_match('/(\d{1,2}):(\d{2})/', $plainContent, $timeMatches)) {
+                                $extractedDate->setTime($timeMatches[1], $timeMatches[2]);
+                            }
+                            $startDate = $extractedDate;
+                        } catch (\Exception $e) {
+                            // エラーは無視
+                        }
+                    }
+
+                    if (!$endDate) {
+                        $endDate = $startDate->copy()->addHours(2);
+                    }
+
+                    // venue_typeの判定
+                    $venueType = 'indoor';
+                    if (stripos($location, '屋外') !== false || stripos($location, '公園') !== false) {
+                        $venueType = 'outdoor';
+                    }
 
                     $events[] = [
                         'name' => mb_substr($title, 0, 255),
-                        'overview' => mb_substr(strip_tags($content), 0, 1000),
+                        'overview' => mb_substr($plainContent, 0, 1000),
                         'external_url' => $link,
                         'start_date' => $startDate->format('Y-m-d H:i:s'),
                         'end_date' => $endDate->format('Y-m-d H:i:s'),
                         'category_id' => $defaultCategoryId,
-                        'location' => 'イベント会場',
-                        'venue_type' => 'indoor',
+                        'location' => $location,
+                        'address' => $address,
+                        'latitude' => $latitude,
+                        'longitude' => $longitude,
+                        'venue_type' => $venueType,
                     ];
 
                     if (count($events) >= 20) {
