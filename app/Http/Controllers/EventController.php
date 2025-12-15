@@ -231,27 +231,6 @@ class EventController extends Controller
     public function index()
     {
         try {
-            // Google Calendar 自動同期（認証済みユーザーのみ）
-            if (Auth::check()) {
-                $user = Auth::user();
-                if ($user->google_calendar_connected && $user->google_calendar_token) {
-                    try {
-                        $googleCalendarController = new GoogleCalendarController();
-                        $syncResult = $googleCalendarController->autoSync();
-
-                        if ($syncResult['success'] && $syncResult['imported_count'] > 0) {
-                            session()->flash('success', $syncResult['message']);
-                        }
-                    } catch (Exception $e) {
-                        Log::warning('Auto-sync failed on events index', [
-                            'user_id' => $user->id,
-                            'error' => $e->getMessage()
-                        ]);
-                        // エラーは無視してページを表示
-                    }
-                }
-            }
-
             $events = Event::with('category')
                 ->withAvg('reviews', 'rating')
                 ->withCount('reviews')

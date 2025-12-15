@@ -128,4 +128,12 @@ class User extends Authenticatable
             'review_id'
         )->withTimestamps();
     }
+
+    /**
+     * ユーザーのGoogleカレンダーイベント
+     */
+    public function googleCalendarEvents(): HasMany
+    {
+        return $this->hasMany(GoogleCalendarEvent::class);
+    }
 }

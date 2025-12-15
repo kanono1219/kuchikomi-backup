@@ -100,7 +100,7 @@
                             </div>
                             <ul class="text-sm text-green-700 mt-2 list-disc list-inside space-y-1">
                                 <li>お気に入りしたイベントは自動的にGoogleカレンダーに追加されます</li>
-                                <li>Googleカレンダーの新しいイベントは自動的にインポートされます</li>
+                                <li>Googleカレンダーの予定は別途保存され、このアプリのイベントとは区別されます</li>
                                 <li>マイページを開くたびに自動同期が実行されます</li>
                             </ul>
                         </div>
@@ -125,10 +125,10 @@
                         </div>
                     @else
                         <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-                            <p class="text-gray-700 mb-2 font-semibold">Google Calendarと連携して、イベントを自動的に同期できます。</p>
+                            <p class="text-gray-700 mb-2 font-semibold">Google Calendarと連携して、予定を自動的に同期できます。</p>
                             <ul class="text-sm text-gray-600 list-disc list-inside space-y-1">
                                 <li>お気に入りに追加すると自動的にGoogleカレンダーに登録</li>
-                                <li>Googleカレンダーの新しいイベントを自動的にインポート</li>
+                                <li>Googleカレンダーの予定を別途保存（このアプリのイベントとは区別）</li>
                                 <li>マイページを開くたびに自動同期が実行されます</li>
                                 <li>すべてのデバイスでイベントを同期</li>
                             </ul>

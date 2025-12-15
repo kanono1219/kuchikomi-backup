@@ -42,7 +42,7 @@
                                     $eventId = $googleEvent->getId();
 
                                     // 既にインポート済みか確認
-                                    $isImported = \App\Models\Event::where('google_calendar_event_id', $eventId)
+                                    $isImported = \App\Models\GoogleCalendarEvent::where('google_event_id', $eventId)
                                         ->where('user_id', $user->id)
                                         ->exists();
                                 @endphp
