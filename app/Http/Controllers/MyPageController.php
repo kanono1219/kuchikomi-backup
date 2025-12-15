@@ -13,8 +13,8 @@ class MyPageController extends Controller
     {
         $user = $request->user();
         $favoriteEvents = $user->favoriteEvents()
-            ->withAvgRating()
-            ->withReviewsCount()
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
             ->orderBy('events.start_date', 'desc')
             ->paginate(10);
 
