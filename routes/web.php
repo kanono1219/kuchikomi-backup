@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
 // ========== マイページ（認証必須） ==========
 Route::middleware('auth')->group(function () {
     Route::get('/mypage', [MyPageController::class, 'index'])->name('mypage');
+    Route::post('/mypage/notification-settings', [MyPageController::class, 'updateNotificationSettings'])->name('mypage.notification-settings.update');
 });
 
 // ========== イベント管理ルート ==========

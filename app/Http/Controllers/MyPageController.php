@@ -23,4 +23,19 @@ class MyPageController extends Controller
             'favoriteEvents' => $favoriteEvents,
         ]);
     }
+
+    public function updateNotificationSettings(Request $request)
+    {
+        $request->validate([
+            'notification_days_before' => 'nullable|integer|min:0|max:30',
+        ]);
+
+        $user = $request->user();
+        $user->update([
+            'notification_days_before' => $request->input('notification_days_before'),
+        ]);
+
+        return redirect()->route('mypage')
+            ->with('success', '通知設定を更新しました');
+    }
 }
