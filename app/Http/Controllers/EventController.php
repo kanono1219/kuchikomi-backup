@@ -643,7 +643,8 @@ class EventController extends Controller
             }
 
             // 最新のお気に入い数を取得
-            $favoritesCount = $event->favorites()->count();
+            $event->load('favorites');
+            $favoritesCount = $event->favorites ? $event->favorites->count() : 0;
 
             $message = $wasFavorited
                 ? '❤️ お気に入いに追加しました' . $googleCalendarMessage
