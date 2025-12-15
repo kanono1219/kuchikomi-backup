@@ -52,7 +52,7 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(
             BuddyPost::class,
-            'buddy_post_join_requests',
+            'buddy_post_participants',
             'user_id',
             'buddy_post_id'
         )->withTimestamps();
@@ -65,7 +65,7 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(
             BuddyPost::class,
-            'buddy_post_join_requests',
+            'buddy_post_participants',
             'user_id',
             'buddy_post_id'
         )->withPivot('status')->withTimestamps();
