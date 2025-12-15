@@ -59,6 +59,19 @@ class User extends Authenticatable
     }
 
     /**
+     * ユーザーが参加しているバディ募集（エイリアス）
+     */
+    public function participatingBuddyPosts(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            BuddyPost::class,
+            'buddy_post_join_requests',
+            'user_id',
+            'buddy_post_id'
+        )->withPivot('status')->withTimestamps();
+    }
+
+    /**
      * ユーザーが作成したイベント
      */
     public function events(): HasMany

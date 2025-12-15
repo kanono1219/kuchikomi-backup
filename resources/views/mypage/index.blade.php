@@ -72,6 +72,61 @@
                 </div>
             </div>
             
+            <!-- Google Calendar連携セクション -->
+            <div class="bg-white overflow-hidden shadow-lg rounded-xl mb-8">
+                <div class="p-6">
+                    <h3 class="text-2xl font-bold mb-6 text-gray-800">{{ __('Google Calendar 連携') }}</h3>
+
+                    @if(auth()->user()->google_calendar_connected)
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="text-green-800 font-medium">Google Calendarに接続済み</span>
+                            </div>
+                            <p class="text-sm text-green-700 mt-2">お気に入りしたイベントは自動的にGoogleカレンダーに追加されます。</p>
+                        </div>
+
+                        <div class="flex space-x-4">
+                            <a href="{{ route('google-calendar.events') }}"
+                               class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition duration-200 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Googleカレンダーからイベントをインポート
+                            </a>
+
+                            <form action="{{ route('google-calendar.disconnect') }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit"
+                                        onclick="return confirm('Google Calendar との接続を解除しますか？')"
+                                        class="bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 transition duration-200">
+                                    接続を解除
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                            <p class="text-gray-700 mb-2">Google Calendarと連携して、お気に入りイベントを自動的にカレンダーに追加できます。</p>
+                            <ul class="text-sm text-gray-600 list-disc list-inside space-y-1">
+                                <li>お気に入りに追加すると自動的にGoogleカレンダーに登録</li>
+                                <li>Googleカレンダーのイベントをこのアプリにインポート</li>
+                                <li>すべてのデバイスでイベントを同期</li>
+                            </ul>
+                        </div>
+
+                        <a href="{{ route('google-calendar.authenticate') }}"
+                           class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition duration-200 inline-flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            Google Calendar と連携する
+                        </a>
+                    @endif
+                </div>
+            </div>
+
             <!-- 参加者募集の管理 -->
             <div class="bg-white overflow-hidden shadow-lg rounded-xl mb-8">
                 <div class="p-6">

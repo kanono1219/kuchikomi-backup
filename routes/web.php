@@ -148,6 +148,8 @@ Route::middleware('auth')->prefix('google-calendar')->name('google-calendar.')->
     Route::post('/remove-event/{event}', [GoogleCalendarController::class, 'removeEventFromCalendar'])->name('remove-event');
     Route::get('/status', [GoogleCalendarController::class, 'getConnectionStatus'])->name('status');
     Route::post('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
+    Route::get('/events', [GoogleCalendarController::class, 'fetchEvents'])->name('events');
+    Route::post('/import-event', [GoogleCalendarController::class, 'importEvent'])->name('import-event');
 });
 
 // ========== RSSインポーター（認証必須） ==========
