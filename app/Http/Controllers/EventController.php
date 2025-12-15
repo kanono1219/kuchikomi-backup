@@ -145,13 +145,13 @@ class EventController extends Controller
     {
         try {
             $today = Carbon::now()->startOfDay();
-            $tomorrow = Carbon::now()->addDay()->endOfDay();
+            $todayEnd = Carbon::now()->endOfDay();
 
             $query = Event::with('category')
                 ->withAvg('reviews', 'rating')
                 ->withCount('reviews')
                 ->where('deleted_at', null)
-                ->whereBetween('start_date', [$today, $tomorrow]);
+                ->whereBetween('start_date', [$today, $todayEnd]);
 
             // 天気に基づいてフィルタリング
             if ($weatherData['weather'] === 'sunny') {
