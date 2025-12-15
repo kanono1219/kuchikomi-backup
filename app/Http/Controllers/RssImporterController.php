@@ -85,9 +85,27 @@ class RssImporterController extends Controller
                     $latitude = 26.2124;
                     $longitude = 127.6809;
 
+                    // tp:eventPlace, tp:eventAddress から場所情報を取得（TechPlay形式）
+                    if (isset($item->children('tp', true)->eventPlace)) {
+                        $tpPlace = trim((string)$item->children('tp', true)->eventPlace);
+                        if (!empty($tpPlace)) {
+                            $location = $tpPlace;
+                        }
+                    }
+
+                    if (isset($item->children('tp', true)->eventAddress)) {
+                        $tpAddress = trim((string)$item->children('tp', true)->eventAddress);
+                        if (!empty($tpAddress)) {
+                            $address = $tpAddress;
+                        }
+                    }
+
                     // ev:location タグから場所を取得
                     if (isset($item->children('ev', true)->location)) {
-                        $location = trim((string)$item->children('ev', true)->location);
+                        $evLocation = trim((string)$item->children('ev', true)->location);
+                        if (!empty($evLocation)) {
+                            $location = $evLocation;
+                        }
                     }
 
                     // geo:lat, geo:long から位置情報を取得
@@ -98,9 +116,9 @@ class RssImporterController extends Controller
                         $longitude = (float)$item->children('geo', true)->long;
                     }
 
-                    // description から場所情報を抽出
+                    // description から場所情報を抽出（上記で取得できなかった場合）
                     $plainDescription = strip_tags($description);
-                    if (preg_match('/(?:場所|会場|開催地)[:：]\s*([^\n]+)/u', $plainDescription, $matches)) {
+                    if ($location === 'オンライン' && preg_match('/(?:場所|会場|開催地)[:：]\s*([^\n]+)/u', $plainDescription, $matches)) {
                         $extractedLocation = trim($matches[1]);
                         if (!empty($extractedLocation)) {
                             $location = mb_substr($extractedLocation, 0, 255);
@@ -111,8 +129,25 @@ class RssImporterController extends Controller
                     $startDate = Carbon::now();
                     $endDate = null;
 
+                    // tp:eventStartTime, tp:eventEndTime から日時を取得（TechPlay形式）- 最優先
+                    if (isset($item->children('tp', true)->eventStartTime)) {
+                        try {
+                            $startDate = Carbon::parse((string)$item->children('tp', true)->eventStartTime);
+                        } catch (\Exception $e) {
+                            \Log::warning('Failed to parse tp:eventStartTime: ' . $e->getMessage());
+                        }
+                    }
+
+                    if (isset($item->children('tp', true)->eventEndTime)) {
+                        try {
+                            $endDate = Carbon::parse((string)$item->children('tp', true)->eventEndTime);
+                        } catch (\Exception $e) {
+                            \Log::warning('Failed to parse tp:eventEndTime: ' . $e->getMessage());
+                        }
+                    }
+
                     // ev:startdate, ev:enddate から日時を取得
-                    if (isset($item->children('ev', true)->startdate)) {
+                    if (!isset($item->children('tp', true)->eventStartTime) && isset($item->children('ev', true)->startdate)) {
                         try {
                             $startDate = Carbon::parse((string)$item->children('ev', true)->startdate);
                         } catch (\Exception $e) {
@@ -120,7 +155,7 @@ class RssImporterController extends Controller
                         }
                     }
 
-                    if (isset($item->children('ev', true)->enddate)) {
+                    if (!isset($item->children('tp', true)->eventEndTime) && isset($item->children('ev', true)->enddate)) {
                         try {
                             $endDate = Carbon::parse((string)$item->children('ev', true)->enddate);
                         } catch (\Exception $e) {
@@ -128,8 +163,8 @@ class RssImporterController extends Controller
                         }
                     }
 
-                    // pubDateから日時を取得
-                    if (!empty($item->pubDate) && !isset($item->children('ev', true)->startdate)) {
+                    // pubDateから日時を取得（バックアップ）
+                    if (!empty($item->pubDate) && !isset($item->children('tp', true)->eventStartTime) && !isset($item->children('ev', true)->startdate)) {
                         try {
                             $startDate = Carbon::createFromFormat('D, d M Y H:i:s O', (string)$item->pubDate);
                         } catch (\Exception $e) {
@@ -141,8 +176,8 @@ class RssImporterController extends Controller
                         }
                     }
 
-                    // description から日時を抽出
-                    if (preg_match('/(\d{4})年(\d{1,2})月(\d{1,2})日/', $plainDescription, $dateMatches)) {
+                    // description から日時を抽出（バックアップ）
+                    if (!isset($item->children('tp', true)->eventStartTime) && preg_match('/(\d{4})年(\d{1,2})月(\d{1,2})日/', $plainDescription, $dateMatches)) {
                         try {
                             $extractedDate = Carbon::create($dateMatches[1], $dateMatches[2], $dateMatches[3]);
                             if (preg_match('/(\d{1,2}):(\d{2})/', $plainDescription, $timeMatches)) {
