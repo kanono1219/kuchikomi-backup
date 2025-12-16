@@ -414,6 +414,13 @@ class GoogleCalendarController extends Controller
 
             Log::info('Disconnecting Google Calendar for user: ' . $user->id);
 
+            // Googleカレンダーイベントをすべて削除
+            $deletedCount = GoogleCalendarEvent::where('user_id', $user->id)->delete();
+            Log::info('Deleted Google Calendar events', [
+                'user_id' => $user->id,
+                'count' => $deletedCount
+            ]);
+
             // ユーザーのトークンと接続状態をクリア
             DB::table('users')
                 ->where('id', $user->id)
