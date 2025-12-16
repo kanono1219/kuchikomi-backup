@@ -47,22 +47,6 @@
                     </div>
                 @endif
 
-                <!-- ===== Google Calendar 接続状態 ===== -->
-                @auth
-                <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div class="flex items-center justify-between flex-wrap gap-4">
-                        <div>
-                            <h3 class="text-lg font-semibold text-blue-900">🔗 Google Calendar 連携</h3>
-                            @if(Auth::user()->google_calendar_connected)
-                                <p class="text-green-600 text-sm mt-1">✅ Google Calendar に接続しています</p>
-                            @else
-                                <p class="text-gray-600 text-sm mt-1">Google Calendar を接続するとお気に入いイベントが自動同期されます</p>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-                @endauth
-
                 <!-- ===== カレンダー表示エリア ===== -->
                 <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
                     <div id="calendar" style="min-height: 700px;"></div>
