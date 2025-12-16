@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use App\Models\User;
 use App\Models\Event;
+use App\Models\GoogleCalendarEvent;
 use Illuminate\Support\Facades\Log;
 
 class MyPageController extends Controller
@@ -23,13 +24,18 @@ class MyPageController extends Controller
 
                 if ($syncResult['success'] && $syncResult['imported_count'] > 0) {
                     session()->flash('success', $syncResult['message']);
+                } elseif (!$syncResult['success']) {
+                    // エラーメッセージを表示
+                    session()->flash('error', 'Google Calendar同期エラー: ' . $syncResult['message']);
                 }
             } catch (\Exception $e) {
-                Log::warning('Auto-sync failed on mypage load', [
+                Log::error('Auto-sync failed on mypage load', [
                     'user_id' => $user->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
                 ]);
-                // エラーは無視してページを表示
+                // エラーをユーザーに表示
+                session()->flash('error', 'Google Calendar自動同期に失敗しました: ' . $e->getMessage());
             }
         }
 
@@ -39,10 +45,17 @@ class MyPageController extends Controller
             ->orderBy('events.start_date', 'desc')
             ->paginate(10);
 
+        // Googleカレンダーイベント数を取得
+        $googleCalendarEventsCount = 0;
+        if ($user->google_calendar_connected) {
+            $googleCalendarEventsCount = GoogleCalendarEvent::where('user_id', $user->id)->count();
+        }
+
         return view('mypage.index', [
             'user' => $user,
             'favoriteEvents' => $favoriteEvents,
             'syncResult' => $syncResult,
+            'googleCalendarEventsCount' => $googleCalendarEventsCount,
         ]);
     }
 

@@ -103,6 +103,12 @@
                                 <li>Googleカレンダーの予定は別途保存され、このアプリのイベントとは区別されます</li>
                                 <li>マイページを開くたびに自動同期が実行されます</li>
                             </ul>
+                            <div class="mt-3 p-3 bg-blue-50 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-medium text-blue-800">同期済みのGoogleカレンダー予定:</span>
+                                    <span class="text-lg font-bold text-blue-900">{{ $googleCalendarEventsCount ?? 0 }}件</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="flex space-x-4">
