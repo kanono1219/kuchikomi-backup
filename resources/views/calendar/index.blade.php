@@ -79,7 +79,7 @@
                 <!-- ===== 凡例 ===== -->
                 <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
                     <h3 class="text-xl font-bold text-gray-800 mb-4">凡例</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-{{ Auth::check() && Auth::user()->google_calendar_connected ? '3' : '2' }} gap-6">
                         <div class="flex items-center gap-3">
                             <div class="w-6 h-6 rounded" style="background-color: #4ECDC4;"></div>
                             <div>
@@ -94,6 +94,7 @@
                                 <p class="text-sm text-gray-600">あなたがお気に入いに追加したイベント</p>
                             </div>
                         </div>
+                        @if(Auth::check() && Auth::user()->google_calendar_connected)
                         <div class="flex items-center gap-3">
                             <div class="w-6 h-6 rounded" style="background-color: #FF8C00;"></div>
                             <div>
@@ -101,6 +102,7 @@
                                 <p class="text-sm text-gray-600">Google Calendarから同期したイベント</p>
                             </div>
                         </div>
+                        @endif
                     </div>
                 </div>
 
