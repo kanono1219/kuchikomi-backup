@@ -18,6 +18,25 @@ class CalendarController extends Controller
     public function index()
     {
         Log::info('Calendar index page loaded');
+
+        // Google Calendar 自動同期（認証済みユーザーのみ）
+        $user = Auth::user();
+        if ($user && $user->google_calendar_connected && $user->google_calendar_token) {
+            try {
+                $googleCalendarController = new GoogleCalendarController();
+                $syncResult = $googleCalendarController->autoSync();
+
+                if ($syncResult['success'] && $syncResult['imported_count'] > 0) {
+                    session()->flash('success', $syncResult['message']);
+                }
+            } catch (Exception $e) {
+                Log::error('Auto-sync failed on calendar page load', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
         return view('calendar.index');
     }
 
