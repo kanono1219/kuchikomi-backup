@@ -395,7 +395,7 @@
                                     @if(auth()->user()->google_calendar_connected)
                                     <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 border-t mt-3 pt-3">
                                         <div class="w-3 h-3 rounded" style="background-color: #FF8C00;"></div>
-                                        <span class="text-gray-700 font-semibold">📅 Google Calendar</span>
+                                        <span class="text-gray-700 font-semibold">📅 Google Calendar予定</span>
                                     </div>
                                     @endif
                                 @endauth
@@ -424,9 +424,9 @@
                 <div class="bg-white rounded-xl shadow-lg p-8">
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h3 class="text-2xl font-bold text-gray-800 mb-2">個人用 Google Calendar を表示</h3>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-2">Google Calendar の予定を表示</h3>
                             <p class="text-gray-600">
-                                Google Calendar に登録された個人的な用事やスケジュールがこのカレンダーに表示されます
+                                Google Calendar に登録された予定がこのカレンダーに表示されます
                             </p>
                         </div>
                         <div id="calendarStatus" class="text-center">
@@ -465,8 +465,8 @@
                         <ul class="text-blue-700 text-sm space-y-1">
                             <li>✅ 1. 「Google と接続」ボタンをクリック</li>
                             <li>✅ 2. Googleアカウントでログイン</li>
-                            <li>✅ 3. Google Calendar の個人的な用事がこのカレンダーに表示されます（📅 オレンジ色）</li>
-                            <li>✅ 4. イベントを見つけるときに個人スケジュールも確認できます</li>
+                            <li>✅ 3. Google Calendar の予定がカレンダーに表示されます（📅 オレンジ色）</li>
+                            <li>✅ 4. イベントと個人の予定を一緒に確認できます</li>
                         </ul>
                     </div>
                 </div>

@@ -208,7 +208,14 @@ class CalendarController extends Controller
                 return response()->json([]);
             }
 
-            // ローカルDBからGoogleカレンダーイベントを取得
+            // ローカルDBからGoogleカレンダーの予定を取得
+            // まず、全レコード数を確認
+            $totalCount = GoogleCalendarEvent::where('user_id', $user->id)->count();
+            Log::info('Total Google Calendar events in DB', [
+                'user_id' => $user->id,
+                'total_count' => $totalCount
+            ]);
+
             $googleEvents = GoogleCalendarEvent::where('user_id', $user->id)
                 ->where(function ($query) use ($startDate, $endDate) {
                     // 開始日が範囲内 OR 終了日が範囲内 OR 範囲をカバーしている
@@ -220,24 +227,32 @@ class CalendarController extends Controller
                           });
                 })
                 ->orderBy('start_date', 'asc')
-                ->get()
-                ->map(function ($event) {
-                    return [
-                        'id' => 'gc_' . $event->id, // Prefix to distinguish from app events
-                        'title' => $event->name,
-                        'start' => $event->start_date ? Carbon::parse($event->start_date)->format('Y-m-d\TH:i:s') : null,
-                        'end' => $event->end_date ? Carbon::parse($event->end_date)->format('Y-m-d\TH:i:s') : null,
-                        'color' => '#FF8C00', // Orange for Google Calendar
-                        'extendedProps' => [
-                            'type' => 'google_calendar',
-                            'description' => $event->description ?? '',
-                            'location' => $event->location ?? '',
-                            'html_link' => $event->html_link ?? '',
-                        ]
-                    ];
-                });
+                ->get();
 
-            Log::info('Google Calendar events fetched from local DB successfully', [
+            Log::info('Google Calendar events filtered by date range', [
+                'user_id' => $user->id,
+                'filtered_count' => $googleEvents->count(),
+                'start' => $startDate->format('Y-m-d'),
+                'end' => $endDate->format('Y-m-d')
+            ]);
+
+            $googleEvents = $googleEvents->map(function ($event) {
+                return [
+                    'id' => 'gc_' . $event->id, // Prefix to distinguish from app events
+                    'title' => $event->name,
+                    'start' => $event->start_date ? Carbon::parse($event->start_date)->format('Y-m-d\TH:i:s') : null,
+                    'end' => $event->end_date ? Carbon::parse($event->end_date)->format('Y-m-d\TH:i:s') : null,
+                    'color' => '#FF8C00', // Orange for Google Calendar
+                    'extendedProps' => [
+                        'type' => 'google_calendar',
+                        'description' => $event->description ?? '',
+                        'location' => $event->location ?? '',
+                        'html_link' => $event->html_link ?? '',
+                    ]
+                ];
+            });
+
+            Log::info('Google Calendar events mapped successfully', [
                 'user_id' => $user->id,
                 'count' => $googleEvents->count()
             ]);

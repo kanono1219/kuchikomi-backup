@@ -118,7 +118,7 @@
                         @if(Auth::check() && Auth::user()->google_calendar_connected)
                         <div class="flex items-center gap-2">
                             <div class="w-4 h-4 rounded" style="background-color: #FF8C00;"></div>
-                            <p class="text-sm text-gray-700">Google Calendar</p>
+                            <p class="text-sm text-gray-700">Google Calendar予定</p>
                         </div>
                         @endif
                     </div>
