@@ -13,6 +13,36 @@ use Exception;
 class CalendarController extends Controller
 {
     /**
+     * カテゴリーごとの色マッピング
+     */
+    private function getCategoryColor($categoryName, $isFavorited = false)
+    {
+        $colors = [
+            '祭り' => '#FF6B6B',          // 赤
+            '音楽イベント' => '#9B59B6',   // 紫
+            '展示会' => '#3498DB',         // 青
+            'スポーツイベント' => '#2ECC71', // 緑
+            '式典' => '#F39C12',           // オレンジ
+            'RSS配信' => '#95A5A6',        // グレー
+        ];
+
+        // お気に入りの場合は少し濃い色にする
+        if ($isFavorited) {
+            $favoritedColors = [
+                '祭り' => '#E74C3C',
+                '音楽イベント' => '#8E44AD',
+                '展示会' => '#2980B9',
+                'スポーツイベント' => '#27AE60',
+                '式典' => '#D68910',
+                'RSS配信' => '#7F8C8D',
+            ];
+            return $favoritedColors[$categoryName] ?? '#E74C3C';
+        }
+
+        return $colors[$categoryName] ?? '#4ECDC4'; // デフォルトはティール
+    }
+
+    /**
      * カレンダービュー表示（認証不要）
      */
     public function index()
@@ -93,16 +123,19 @@ class CalendarController extends Controller
                         ->where('event_id', $event->id)
                         ->exists() : false;
 
+                    // カテゴリー名を取得
+                    $categoryName = $event->category->name ?? '';
+
                     // イベントデータを FullCalendar フォーマットに変換
                     return [
                         'id' => (string)$event->id,
                         'title' => $event->name,
                         'start' => $event->start_date ? Carbon::parse($event->start_date)->format('Y-m-d\TH:i:s') : null,
                         'end' => $event->end_date ? Carbon::parse($event->end_date)->format('Y-m-d\TH:i:s') : null,
-                        'color' => $isFavorited ? '#FF6B6B' : '#4ECDC4', // Red for favorited, teal for normal
+                        'color' => $this->getCategoryColor($categoryName, $isFavorited),
                         'extendedProps' => [
                             'type' => 'app_event',
-                            'category' => $event->category->name ?? '',
+                            'category' => $categoryName,
                             'location' => $event->location ?? '',
                             'description' => $event->overview ?? '',
                             'image' => $event->image_url ?? null,

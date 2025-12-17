@@ -365,15 +365,31 @@
                     
                     <div class="space-y-6">
                         <div class="bg-white rounded-xl shadow-lg p-6">
-                            <h3 class="font-bold text-lg text-gray-800 mb-4">📌 イベント種類</h3>
+                            <h3 class="font-bold text-lg text-gray-800 mb-4">📌 カテゴリー別</h3>
                             <div class="space-y-2 text-sm">
                                 <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                                    <div class="w-3 h-3 rounded" style="background-color: #4ECDC4;"></div>
-                                    <span class="text-gray-700">🎪 webアプリイベント</span>
+                                    <div class="w-3 h-3 rounded" style="background-color: #FF6B6B;"></div>
+                                    <span class="text-gray-700">祭り</span>
                                 </div>
                                 <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                                    <div class="w-3 h-3 rounded" style="background-color: #FF6B6B;"></div>
-                                    <span class="text-gray-700">❤️ お気に入いイベント</span>
+                                    <div class="w-3 h-3 rounded" style="background-color: #9B59B6;"></div>
+                                    <span class="text-gray-700">音楽イベント</span>
+                                </div>
+                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
+                                    <div class="w-3 h-3 rounded" style="background-color: #3498DB;"></div>
+                                    <span class="text-gray-700">展示会</span>
+                                </div>
+                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
+                                    <div class="w-3 h-3 rounded" style="background-color: #2ECC71;"></div>
+                                    <span class="text-gray-700">スポーツイベント</span>
+                                </div>
+                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
+                                    <div class="w-3 h-3 rounded" style="background-color: #F39C12;"></div>
+                                    <span class="text-gray-700">式典</span>
+                                </div>
+                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
+                                    <div class="w-3 h-3 rounded" style="background-color: #95A5A6;"></div>
+                                    <span class="text-gray-700">RSS配信</span>
                                 </div>
                                 @auth
                                     @if(auth()->user()->google_calendar_connected)
@@ -383,6 +399,9 @@
                                     </div>
                                     @endif
                                 @endauth
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <p class="text-xs text-gray-500">💡 お気に入りは濃い色で表示</p>
                             </div>
                         </div>
 
