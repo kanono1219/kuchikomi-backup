@@ -397,7 +397,61 @@
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Google Calendar セクション -->
+            <div class="mb-16">
+                <h2 class="section-title mb-8">🔗 Google カレンダーと連携</h2>
+
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-2">個人用 Google Calendar を表示</h3>
+                            <p class="text-gray-600">
+                                Google Calendar に登録された個人的な用事やスケジュールがこのカレンダーに表示されます
+                            </p>
+                        </div>
+                        <div id="calendarStatus" class="text-center">
+                            @auth
+                                @if(auth()->user()->google_calendar_connected)
+                                    <div class="text-green-600 font-bold mb-3">
+                                        ✓ 接続済み
+                                    </div>
+                                    <form action="{{ route('google-calendar.disconnect') }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600" onclick="return confirm('Google Calendar との接続を解除しますか？')">
+                                            接続を解除
+                                        </button>
+                                    </form>
+                                @else
+                                    <div class="text-gray-600 font-bold mb-3">
+                                        未接続
+                                    </div>
+                                    <a href="{{ route('google-calendar.authenticate') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                                        Google と接続
+                                    </a>
+                                @endif
+                            @else
+                                <div class="text-gray-600 font-bold mb-3">
+                                    ログインが必要です
+                                </div>
+                                <a href="{{ route('login') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                                    ログイン
+                                </a>
+                            @endauth
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 class="font-bold text-blue-800 mb-2">📌 使い方</h4>
+                        <ul class="text-blue-700 text-sm space-y-1">
+                            <li>✅ 1. 「Google と接続」ボタンをクリック</li>
+                            <li>✅ 2. Googleアカウントでログイン</li>
+                            <li>✅ 3. Google Calendar の個人的な用事がこのカレンダーに表示されます（📅 オレンジ色）</li>
+                            <li>✅ 4. イベントを見つけるときに個人スケジュールも確認できます</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
             <!-- 最新のイベント -->
             <div class="mb-16">
