@@ -474,12 +474,12 @@ class GoogleCalendarController extends Controller
             // Google Calendar API を初期化
             $service = new Calendar($this->client);
 
-            // 今日から3ヶ月後までのイベントを取得
-            $timeMin = new \DateTime('now', new \DateTimeZone('Asia/Tokyo'));
-            $timeMax = new \DateTime('+3 months', new \DateTimeZone('Asia/Tokyo'));
+            // 6ヶ月前から6ヶ月後までのイベントを取得
+            $timeMin = new \DateTime('-6 months', new \DateTimeZone('Asia/Tokyo'));
+            $timeMax = new \DateTime('+6 months', new \DateTimeZone('Asia/Tokyo'));
 
             $optParams = [
-                'maxResults' => 100,
+                'maxResults' => 250,
                 'orderBy' => 'startTime',
                 'singleEvents' => true,
                 'timeMin' => $timeMin->format(\DateTime::RFC3339),
@@ -659,12 +659,12 @@ class GoogleCalendarController extends Controller
             // Google Calendar API を初期化
             $service = new Calendar($this->client);
 
-            // 今日から3ヶ月後までのイベントを取得
-            $timeMin = new \DateTime('now', new \DateTimeZone('Asia/Tokyo'));
-            $timeMax = new \DateTime('+3 months', new \DateTimeZone('Asia/Tokyo'));
+            // 6ヶ月前から6ヶ月後までのイベントを取得
+            $timeMin = new \DateTime('-6 months', new \DateTimeZone('Asia/Tokyo'));
+            $timeMax = new \DateTime('+6 months', new \DateTimeZone('Asia/Tokyo'));
 
             $optParams = [
-                'maxResults' => 100,
+                'maxResults' => 250,
                 'orderBy' => 'startTime',
                 'singleEvents' => true,
                 'timeMin' => $timeMin->format(\DateTime::RFC3339),

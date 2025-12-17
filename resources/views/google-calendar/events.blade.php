@@ -23,7 +23,7 @@
                 <div class="p-6 text-gray-900">
                     <div class="mb-6">
                         <h3 class="text-lg font-semibold mb-2">Googleカレンダーのイベント一覧</h3>
-                        <p class="text-sm text-gray-600">今日から3ヶ月後までのイベントを表示しています。インポートしたいイベントを選択してください。</p>
+                        <p class="text-sm text-gray-600">6ヶ月前から6ヶ月後までのイベントを表示しています。インポートしたいイベントを選択してください。</p>
                     </div>
 
                     @if(count($googleEvents) === 0)
