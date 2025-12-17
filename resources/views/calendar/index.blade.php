@@ -235,36 +235,48 @@
                         debugLog('アプリイベント取得数', appEvents.length);
                         allEvents.push(...appEvents);
 
-                        // 2. Google Calendar イベントを取得（認証済みユーザーのみ）
+                        // 2. Google Calendar 予定を取得（認証済みユーザーのみ）
                         @auth
                         try {
                             const googleUrl = `/calendar/google-events?start=${info.start.toISOString()}&end=${info.end.toISOString()}`;
-                            debugLog('GoogleカレンダーAPI URL', googleUrl);
+                            debugLog('🔍 GoogleカレンダーAPI URL', googleUrl);
 
                             const googleResponse = await fetch(googleUrl, {
                                 headers: {
                                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                                 }
                             });
-                            debugLog('Googleカレンダーレスポンスステータス', googleResponse.status);
+                            debugLog('📡 Googleカレンダーレスポンスステータス', googleResponse.status);
 
                             if (googleResponse.ok) {
                                 const googleData = await googleResponse.json();
+                                debugLog('📦 Googleカレンダー生データ', googleData);
 
                                 // レスポンスが配列の場合とオブジェクトの場合を処理
                                 const googleEvents = Array.isArray(googleData) ? googleData : (googleData.events || []);
 
-                                debugLog('Googleカレンダーイベント取得数', googleEvents.length);
-                                if (googleEvents.length > 0) {
+                                debugLog('📊 Googleカレンダー予定取得数', googleEvents.length);
+
+                                // length が 0 でも処理を続行
+                                if (googleEvents.length === 0) {
+                                    debugLog('⚠️ Googleカレンダー予定が0件です');
+                                } else {
                                     allEvents.push(...googleEvents);
-                                    debugLog('✅ Googleカレンダーイベント取得成功');
+                                    debugLog('✅ Googleカレンダー予定をカレンダーに追加しました', googleEvents.length + '件');
                                 }
                             } else {
-                                debugLog('⚠️ Googleカレンダーイベント取得スキップ (未接続またはエラー)');
+                                const errorText = await googleResponse.text();
+                                debugError('❌ Googleカレンダー予定取得エラー', {
+                                    status: googleResponse.status,
+                                    statusText: googleResponse.statusText,
+                                    body: errorText
+                                });
                             }
                         } catch (googleError) {
-                            debugError('Googleカレンダーイベント取得エラー (スキップ)', googleError);
-                            // Google Calendar エラーは無視して続行
+                            debugError('💥 Googleカレンダー予定取得で例外発生', {
+                                message: googleError.message,
+                                stack: googleError.stack
+                            });
                         }
                         @endauth
 
