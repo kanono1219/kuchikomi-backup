@@ -149,45 +149,78 @@ class CalendarController extends Controller
             ]);
 
             try {
-                $startDate = new \DateTime($start);
-                $endDate = new \DateTime($end);
+                // Carbon を使って日付を解析（タイムゾーンを考慮）
+                $startDate = Carbon::parse($start);
+                $endDate = Carbon::parse($end);
             } catch (Exception $e) {
                 Log::error('Invalid date format for Google Calendar events', ['start' => $start, 'end' => $end, 'error' => $e->getMessage()]);
                 return response()->json([]);
             }
 
-            // ローカルDBからGoogleカレンダーイベントを取得
-            $googleEvents = GoogleCalendarEvent::where('user_id', $user->id)
-                ->where(function ($query) use ($startDate, $endDate) {
-                    // 開始日が範囲内 OR 終了日が範囲内 OR 範囲をカバーしている
-                    $query->whereBetween('start_date', [$startDate, $endDate])
-                          ->orWhereBetween('end_date', [$startDate, $endDate])
-                          ->orWhere(function ($q) use ($startDate, $endDate) {
-                              $q->where('start_date', '<=', $startDate)
-                                ->where('end_date', '>=', $endDate);
-                          });
-                })
-                ->orderBy('start_date', 'asc')
-                ->get()
-                ->map(function ($event) {
-                    return [
-                        'id' => 'gc_' . $event->id, // Prefix to distinguish from app events
-                        'title' => $event->name,
-                        'start' => $event->start_date ? Carbon::parse($event->start_date)->format('Y-m-d\TH:i:s') : null,
-                        'end' => $event->end_date ? Carbon::parse($event->end_date)->format('Y-m-d\TH:i:s') : null,
-                        'color' => '#FF8C00', // Orange for Google Calendar
-                        'extendedProps' => [
-                            'type' => 'google_calendar',
-                            'description' => $event->description ?? '',
-                            'location' => $event->location ?? '',
-                            'html_link' => $event->html_link ?? '',
-                        ]
-                    ];
-                });
-
-            Log::info('Google Calendar events fetched from local DB successfully', [
+            // デバッグ: 全レコード数を確認
+            $totalCount = GoogleCalendarEvent::where('user_id', $user->id)->count();
+            Log::info('Total Google Calendar events in DB', [
                 'user_id' => $user->id,
-                'count' => $googleEvents->count()
+                'total_count' => $totalCount
+            ]);
+
+            // デバッグ: 最初の5件のイベントの日付を確認
+            if ($totalCount > 0) {
+                $sampleEvents = GoogleCalendarEvent::where('user_id', $user->id)
+                    ->orderBy('start_date', 'asc')
+                    ->take(5)
+                    ->get(['id', 'name', 'start_date', 'end_date']);
+
+                Log::info('Sample events from DB', [
+                    'user_id' => $user->id,
+                    'sample_events' => $sampleEvents->map(function($e) {
+                        return [
+                            'id' => $e->id,
+                            'name' => $e->name,
+                            'start' => $e->start_date->format('Y-m-d H:i:s'),
+                            'end' => $e->end_date->format('Y-m-d H:i:s'),
+                        ];
+                    })->toArray()
+                ]);
+            }
+
+            // より簡単なフィルタリング: イベントが表示範囲と重なっているものを取得
+            // Carbon オブジェクトを使って直接比較（Laravel が自動的に変換）
+            $googleEvents = GoogleCalendarEvent::where('user_id', $user->id)
+                ->where('end_date', '>=', $startDate)     // イベント終了日が検索開始日以降
+                ->where('start_date', '<=', $endDate)     // イベント開始日が検索終了日以前
+                ->orderBy('start_date', 'asc')
+                ->get();
+
+            Log::info('Google Calendar events filtered by date range', [
+                'user_id' => $user->id,
+                'filtered_count' => $googleEvents->count(),
+                'requested_start' => $startDate->toDateTimeString(),
+                'requested_end' => $endDate->toDateTimeString(),
+                'filtered_event_ids' => $googleEvents->pluck('id')->toArray(),
+                'filtered_event_names' => $googleEvents->pluck('name')->toArray()
+            ]);
+
+            // FullCalendar フォーマットに変換
+            $googleEvents = $googleEvents->map(function ($event) {
+                return [
+                    'id' => 'gc_' . $event->id, // Prefix to distinguish from app events
+                    'title' => $event->name,
+                    'start' => $event->start_date ? $event->start_date->format('Y-m-d\TH:i:s') : null,
+                    'end' => $event->end_date ? $event->end_date->format('Y-m-d\TH:i:s') : null,
+                    'color' => '#FF8C00', // Orange for Google Calendar
+                    'extendedProps' => [
+                        'type' => 'google_calendar',
+                        'description' => $event->description ?? '',
+                        'location' => $event->location ?? '',
+                        'html_link' => $event->html_link ?? '',
+                    ]
+                ];
+            });
+
+            Log::info('Google Calendar events mapped to FullCalendar format', [
+                'user_id' => $user->id,
+                'final_count' => $googleEvents->count()
             ]);
 
             return response()->json($googleEvents->values());
