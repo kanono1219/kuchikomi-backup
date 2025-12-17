@@ -212,9 +212,13 @@
                                         <div class="flex items-center gap-1">
                                             <span class="rating-stars">★</span>
                                             <span class="text-sm font-semibold text-gray-700">
-                                                {{ number_format($event->reviews_avg_rating, 1) }}
+                                                @if($event->reviews_avg_rating)
+                                                    {{ number_format($event->reviews_avg_rating, 1) }}
+                                                @else
+                                                    <span class="text-gray-400">-</span>
+                                                @endif
                                             </span>
-                                            <span class="text-xs text-gray-500">({{ $event->reviews_count }})</span>
+                                            <span class="text-xs text-gray-500">({{ $event->reviews_count ?? 0 }})</span>
                                         </div>
                                     </div>
 
@@ -275,7 +279,7 @@
             </div>
 
             <!-- イベント作成ボタン -->
-            <div class="mb-16 text-center">
+            <div class="mb-8 text-center">
                 @auth
                     <a href="/events/create" class="btn-primary text-white font-bold py-3 px-8 rounded-full inline-block text-lg">
                         ✨ イベントを作成する
@@ -286,6 +290,69 @@
                     </a>
                 @endauth
             </div>
+
+            <!-- RSS配信でイベントを作成 -->
+            @auth
+            <div class="mb-16">
+                <div class="max-w-3xl mx-auto bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl shadow-lg p-8 border-2 border-orange-200">
+                    <div class="flex items-start gap-6">
+                        <!-- アイコン -->
+                        <div class="flex-shrink-0">
+                            <div class="w-16 h-16 bg-gradient-to-br from-orange-400 to-amber-500 rounded-full flex items-center justify-center shadow-lg">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- コンテンツ -->
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-2">
+                                📡 RSS配信からイベントをインポート
+                            </h3>
+                            <p class="text-gray-600 mb-4 leading-relaxed">
+                                外部サイトのRSS/AtomフィードURLを入力するだけで、イベント情報を一括で取得・登録できます。手動での入力作業を大幅に削減！
+                            </p>
+
+                            <div class="flex flex-wrap gap-3 mb-4">
+                                <span class="inline-flex items-center gap-1 text-sm bg-white px-3 py-1 rounded-full text-gray-700 shadow-sm">
+                                    <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    RSS 2.0対応
+                                </span>
+                                <span class="inline-flex items-center gap-1 text-sm bg-white px-3 py-1 rounded-full text-gray-700 shadow-sm">
+                                    <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Atom対応
+                                </span>
+                                <span class="inline-flex items-center gap-1 text-sm bg-white px-3 py-1 rounded-full text-gray-700 shadow-sm">
+                                    <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    重複チェック
+                                </span>
+                                <span class="inline-flex items-center gap-1 text-sm bg-white px-3 py-1 rounded-full text-gray-700 shadow-sm">
+                                    <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    プレビュー機能
+                                </span>
+                            </div>
+
+                            <a href="{{ route('rss-importer.index') }}"
+                               class="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold py-3 px-6 rounded-full hover:from-orange-600 hover:to-amber-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                RSSインポーターを開く
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endauth
 
             <!-- カレンダーセクション -->
             <div class="mb-16">
@@ -309,10 +376,12 @@
                                     <span class="text-gray-700">❤️ お気に入いイベント</span>
                                 </div>
                                 @auth
-                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 border-t mt-3 pt-3">
-                                    <div class="w-3 h-3 rounded" style="background-color: #FF8C00;"></div>
-                                    <span class="text-gray-700 font-semibold">📅 Google Calendar</span>
-                                </div>
+                                    @if(auth()->user()->google_calendar_connected)
+                                    <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 border-t mt-3 pt-3">
+                                        <div class="w-3 h-3 rounded" style="background-color: #FF8C00;"></div>
+                                        <span class="text-gray-700 font-semibold">📅 Google Calendar</span>
+                                    </div>
+                                    @endif
                                 @endauth
                             </div>
                         </div>
@@ -329,58 +398,6 @@
                 </div>
             </div>
             
-            <!-- Google Calendar セクション -->
-            <div class="mb-16">
-                <h2 class="section-title mb-8">🔗 Google カレンダーと連携</h2>
-                
-                <div class="bg-white rounded-xl shadow-lg p-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <div>
-                            <h3 class="text-2xl font-bold text-gray-800 mb-2">個人用 Google Calendar を表示</h3>
-                            <p class="text-gray-600">
-                                Google Calendar に登録された個人的な用事やスケジュールがこのカレンダーに表示されます
-                            </p>
-                        </div>
-                        <div id="calendarStatus" class="text-center">
-                            @auth
-                                @if(auth()->user()->google_calendar_connected)
-                                    <div class="text-green-600 font-bold mb-3">
-                                        ✓ 接続済み
-                                    </div>
-                                    <form action="{{ route('google-calendar.disconnect') }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                                            接続を解除
-                                        </button>
-                                    </form>
-                                @else
-                                    <div class="text-gray-600 font-bold mb-3">
-                                        未接続
-                                    </div>
-                                    <a href="{{ route('google-calendar.authenticate') }}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold inline-block">
-                                        🔗 Google と接続
-                                    </a>
-                                @endif
-                            @else
-                                <p class="text-gray-600 mb-3">ログインして使用してください</p>
-                                <a href="{{ route('login') }}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold inline-block">
-                                    ログイン
-                                </a>
-                            @endauth
-                        </div>
-                    </div>
-
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 class="font-bold text-blue-800 mb-2">📌 使い方</h4>
-                        <ul class="text-blue-700 text-sm space-y-1">
-                            <li>✅ 1. 「Google と接続」ボタンをクリック</li>
-                            <li>✅ 2. Googleアカウントでログイン</li>
-                            <li>✅ 3. Google Calendar の個人的な用事がこのカレンダーに表示されます（📅 オレンジ色）</li>
-                            <li>✅ 4. イベントを見つけるときに個人スケジュールも確認できます</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
 
             <!-- 最新のイベント -->
             <div class="mb-16">
@@ -407,7 +424,14 @@
                                     <span class="category-tag bg-purple-100 text-purple-700">{{ $event->category->name }}</span>
                                     <div class="flex items-center gap-1">
                                         <span class="rating-stars">★</span>
-                                        <span class="text-sm font-semibold">{{ number_format($event->reviews_avg_rating, 1) }}</span>
+                                        <span class="text-sm font-semibold">
+                                            @if($event->reviews_avg_rating)
+                                                {{ number_format($event->reviews_avg_rating, 1) }}
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </span>
+                                        <span class="text-xs text-gray-500">({{ $event->reviews_count ?? 0 }})</span>
                                     </div>
                                 </div>
                                 <p class="text-sm text-gray-600 line-clamp-2 mb-4">{{ $event->overview }}</p>
@@ -445,7 +469,14 @@
                                     <span class="category-tag bg-pink-100 text-pink-700">{{ $event->category->name }}</span>
                                     <div class="flex items-center gap-1">
                                         <span class="rating-stars">★</span>
-                                        <span class="text-sm font-semibold">{{ number_format($event->reviews_avg_rating, 1) }}</span>
+                                        <span class="text-sm font-semibold">
+                                            @if($event->reviews_avg_rating)
+                                                {{ number_format($event->reviews_avg_rating, 1) }}
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </span>
+                                        <span class="text-xs text-gray-500">({{ $event->reviews_count ?? 0 }})</span>
                                     </div>
                                 </div>
                                 <p class="text-sm text-gray-600 line-clamp-2 mb-4">{{ $event->overview }}</p>

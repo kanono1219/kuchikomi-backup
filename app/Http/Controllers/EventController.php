@@ -145,11 +145,13 @@ class EventController extends Controller
     {
         try {
             $today = Carbon::now()->startOfDay();
-            $tomorrow = Carbon::now()->addDay()->endOfDay();
+            $todayEnd = Carbon::now()->endOfDay();
 
             $query = Event::with('category')
+                ->withAvg('reviews', 'rating')
+                ->withCount('reviews')
                 ->where('deleted_at', null)
-                ->whereBetween('start_date', [$today, $tomorrow]);
+                ->whereBetween('start_date', [$today, $todayEnd]);
 
             // 天気に基づいてフィルタリング
             if ($weatherData['weather'] === 'sunny') {
@@ -185,6 +187,8 @@ class EventController extends Controller
     {
         try {
             return Event::with('category')
+                ->withAvg('reviews', 'rating')
+                ->withCount('reviews')
                 ->where('deleted_at', null)
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
@@ -205,6 +209,8 @@ class EventController extends Controller
     {
         try {
             return Event::with('category')
+                ->withAvg('reviews', 'rating')
+                ->withCount('reviews')
                 ->where('deleted_at', null)
                 ->orderByDesc('reviews_avg_rating')
                 ->orderByDesc('reviews_count')
@@ -226,6 +232,8 @@ class EventController extends Controller
     {
         try {
             $events = Event::with('category')
+                ->withAvg('reviews', 'rating')
+                ->withCount('reviews')
                 ->where('deleted_at', null)
                 ->paginate(12);
 
@@ -249,7 +257,11 @@ class EventController extends Controller
 
             // エラーが発生してもデフォルト値で表示
             return view('events.index', [
-                'events' => Event::with('category')->where('deleted_at', null)->paginate(12),
+                'events' => Event::with('category')
+                    ->withAvg('reviews', 'rating')
+                    ->withCount('reviews')
+                    ->where('deleted_at', null)
+                    ->paginate(12),
                 'weatherData' => $this->getDefaultWeatherData(),
                 'recommendedEvents' => collect(),
                 'latestEvents' => collect(),
@@ -577,7 +589,7 @@ class EventController extends Controller
 
             // toggle() でお気に入い状態を切り替え
             $toggleResult = $user->favoriteEvents()->toggle($event->id);
-            
+
             // toggle() の戻り値を解析
             $wasFavorited = !empty($toggleResult['attached']);
 
@@ -587,10 +599,56 @@ class EventController extends Controller
                 'is_favorited' => $wasFavorited
             ]);
 
-            // 最新のお気に入い数を取得
-            $favoritesCount = $event->favorites()->count();
+            // Googleカレンダーに自動追加/削除
+            $googleCalendarMessage = '';
+            if ($user->google_calendar_connected && $user->google_calendar_token) {
+                try {
+                    if ($wasFavorited) {
+                        // お気に入り追加時：Googleカレンダーにも追加
+                        $googleCalendarController = new GoogleCalendarController();
+                        $response = $googleCalendarController->addEventToCalendar($event);
+                        $responseData = $response->getData();
 
-            $message = $wasFavorited ? '❤️ お気に入いに追加しました' : '💔 お気に入いから削除しました';
+                        if ($responseData->success ?? false) {
+                            $googleCalendarMessage = ' & Googleカレンダーに追加されました';
+                            Log::info('Event auto-added to Google Calendar', [
+                                'event_id' => $event->id,
+                                'user_id' => $user->id
+                            ]);
+                        }
+                    } else {
+                        // お気に入り削除時：Googleカレンダーからも削除
+                        if ($event->google_calendar_event_id) {
+                            $googleCalendarController = new GoogleCalendarController();
+                            $response = $googleCalendarController->removeEventFromCalendar($event);
+                            $responseData = $response->getData();
+
+                            if ($responseData->success ?? false) {
+                                $googleCalendarMessage = ' & Googleカレンダーから削除されました';
+                                Log::info('Event auto-removed from Google Calendar', [
+                                    'event_id' => $event->id,
+                                    'user_id' => $user->id
+                                ]);
+                            }
+                        }
+                    }
+                } catch (Exception $e) {
+                    Log::warning('Google Calendar auto-sync failed', [
+                        'event_id' => $event->id,
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage()
+                    ]);
+                    // Googleカレンダー連携のエラーは無視（お気に入り自体は成功）
+                }
+            }
+
+            // 最新のお気に入い数を取得
+            $event->load('favorites');
+            $favoritesCount = $event->favorites ? $event->favorites->count() : 0;
+
+            $message = $wasFavorited
+                ? '❤️ お気に入いに追加しました' . $googleCalendarMessage
+                : '💔 お気に入いから削除しました' . $googleCalendarMessage;
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([

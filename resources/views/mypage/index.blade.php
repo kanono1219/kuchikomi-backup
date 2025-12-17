@@ -8,6 +8,19 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- メッセージ表示 -->
+            @if (session('success'))
+                <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{ session('success') }}</span>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{ session('error') }}</span>
+                </div>
+            @endif
+
             <!-- 通知設定セクション -->
             <div class="bg-white overflow-hidden shadow-lg rounded-xl mb-8">
                 <div class="p-6">
@@ -72,6 +85,72 @@
                 </div>
             </div>
             
+            <!-- Google Calendar連携セクション -->
+            <div class="bg-white overflow-hidden shadow-lg rounded-xl mb-8">
+                <div class="p-6">
+                    <h3 class="text-2xl font-bold mb-6 text-gray-800">{{ __('Google Calendar 連携') }}</h3>
+
+                    @if(auth()->user()->google_calendar_connected)
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="text-green-800 font-medium">Google Calendarに接続済み</span>
+                            </div>
+                            <ul class="text-sm text-green-700 mt-2 list-disc list-inside space-y-1">
+                                <li>お気に入りしたイベントは自動的にGoogleカレンダーに追加されます</li>
+                                <li>Googleカレンダーの予定は別途保存され、このアプリのイベントとは区別されます</li>
+                                <li>マイページを開くたびに自動同期が実行されます</li>
+                            </ul>
+                            <div class="mt-3 p-3 bg-blue-50 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-medium text-blue-800">同期済みのGoogleカレンダー予定:</span>
+                                    <span class="text-lg font-bold text-blue-900">{{ $googleCalendarEventsCount ?? 0 }}件</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-4">
+                            <a href="{{ route('google-calendar.events') }}"
+                               class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition duration-200 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                イベント一覧を表示（手動インポート）
+                            </a>
+
+                            <form action="{{ route('google-calendar.disconnect') }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit"
+                                        onclick="return confirm('Google Calendar との接続を解除しますか？')"
+                                        class="bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 transition duration-200">
+                                    接続を解除
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                            <p class="text-gray-700 mb-2 font-semibold">Google Calendarと連携して、予定を自動的に同期できます。</p>
+                            <ul class="text-sm text-gray-600 list-disc list-inside space-y-1">
+                                <li>お気に入りに追加すると自動的にGoogleカレンダーに登録</li>
+                                <li>Googleカレンダーの予定を別途保存（このアプリのイベントとは区別）</li>
+                                <li>マイページを開くたびに自動同期が実行されます</li>
+                                <li>すべてのデバイスでイベントを同期</li>
+                            </ul>
+                        </div>
+
+                        <a href="{{ route('google-calendar.authenticate') }}"
+                           class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition duration-200 inline-flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            Google Calendar と連携する
+                        </a>
+                    @endif
+                </div>
+            </div>
+
             <!-- 参加者募集の管理 -->
             <div class="bg-white overflow-hidden shadow-lg rounded-xl mb-8">
                 <div class="p-6">

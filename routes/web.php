@@ -12,6 +12,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\BuddyPostController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Controllers\RssImporterController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -58,6 +59,7 @@ Route::middleware('auth')->group(function () {
 // ========== マイページ（認証必須） ==========
 Route::middleware('auth')->group(function () {
     Route::get('/mypage', [MyPageController::class, 'index'])->name('mypage');
+    Route::post('/mypage/notification-settings', [MyPageController::class, 'updateNotificationSettings'])->name('mypage.notification-settings.update');
 });
 
 // ========== イベント管理ルート ==========
@@ -146,6 +148,15 @@ Route::middleware('auth')->prefix('google-calendar')->name('google-calendar.')->
     Route::post('/remove-event/{event}', [GoogleCalendarController::class, 'removeEventFromCalendar'])->name('remove-event');
     Route::get('/status', [GoogleCalendarController::class, 'getConnectionStatus'])->name('status');
     Route::post('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
+    Route::get('/events', [GoogleCalendarController::class, 'fetchEvents'])->name('events');
+    Route::post('/import-event', [GoogleCalendarController::class, 'importEvent'])->name('import-event');
+});
+
+// ========== RSSインポーター（認証必須） ==========
+Route::middleware('auth')->prefix('rss-importer')->name('rss-importer.')->group(function () {
+    Route::get('/', [RssImporterController::class, 'index'])->name('index');
+    Route::post('/preview', [RssImporterController::class, 'preview'])->name('preview');
+    Route::post('/import', [RssImporterController::class, 'import'])->name('import');
 });
 
 // ========== Breeze 認証ルート ==========

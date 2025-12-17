@@ -175,6 +175,10 @@ class="bg-white border-b border-gray-100">
                                 {{ __('プロフィール') }}
                             </x-dropdown-link>
 
+                            <x-dropdown-link :href="route('rss-importer.index')">
+                                {{ __('RSSインポーター') }}
+                            </x-dropdown-link>
+
                             <!-- 認証 -->
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
@@ -260,6 +264,10 @@ class="bg-white border-b border-gray-100">
 
                     <x-responsive-nav-link :href="route('profile.edit')">
                         {{ __('プロフィール') }}
+                    </x-responsive-nav-link>
+
+                    <x-responsive-nav-link :href="route('rss-importer.index')">
+                        {{ __('RSSインポーター') }}
                     </x-responsive-nav-link>
 
                     <!-- 認証 -->

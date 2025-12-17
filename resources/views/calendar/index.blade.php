@@ -47,22 +47,6 @@
                     </div>
                 @endif
 
-                <!-- ===== Google Calendar 接続状態 ===== -->
-                @auth
-                <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div class="flex items-center justify-between flex-wrap gap-4">
-                        <div>
-                            <h3 class="text-lg font-semibold text-blue-900">🔗 Google Calendar 連携</h3>
-                            @if(Auth::user()->google_calendar_connected)
-                                <p class="text-green-600 text-sm mt-1">✅ Google Calendar に接続しています</p>
-                            @else
-                                <p class="text-gray-600 text-sm mt-1">Google Calendar を接続するとお気に入いイベントが自動同期されます</p>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-                @endauth
-
                 <!-- ===== カレンダー表示エリア ===== -->
                 <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
                     <div id="calendar" style="min-height: 700px;"></div>
@@ -79,7 +63,7 @@
                 <!-- ===== 凡例 ===== -->
                 <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
                     <h3 class="text-xl font-bold text-gray-800 mb-4">凡例</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-{{ Auth::check() && Auth::user()->google_calendar_connected ? '3' : '2' }} gap-6">
                         <div class="flex items-center gap-3">
                             <div class="w-6 h-6 rounded" style="background-color: #4ECDC4;"></div>
                             <div>
@@ -94,6 +78,7 @@
                                 <p class="text-sm text-gray-600">あなたがお気に入いに追加したイベント</p>
                             </div>
                         </div>
+                        @if(Auth::check() && Auth::user()->google_calendar_connected)
                         <div class="flex items-center gap-3">
                             <div class="w-6 h-6 rounded" style="background-color: #FF8C00;"></div>
                             <div>
@@ -101,6 +86,7 @@
                                 <p class="text-sm text-gray-600">Google Calendarから同期したイベント</p>
                             </div>
                         </div>
+                        @endif
                     </div>
                 </div>
 
