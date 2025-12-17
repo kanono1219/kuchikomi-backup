@@ -216,16 +216,10 @@ class CalendarController extends Controller
                 'total_count' => $totalCount
             ]);
 
+            // より簡単なフィルタリング: イベントが表示範囲と重なっているものを取得
             $googleEvents = GoogleCalendarEvent::where('user_id', $user->id)
-                ->where(function ($query) use ($startDate, $endDate) {
-                    // 開始日が範囲内 OR 終了日が範囲内 OR 範囲をカバーしている
-                    $query->whereBetween('start_date', [$startDate, $endDate])
-                          ->orWhereBetween('end_date', [$startDate, $endDate])
-                          ->orWhere(function ($q) use ($startDate, $endDate) {
-                              $q->where('start_date', '<=', $startDate)
-                                ->where('end_date', '>=', $endDate);
-                          });
-                })
+                ->where('end_date', '>=', $startDate)     // イベント終了日が検索開始日以降
+                ->where('start_date', '<=', $endDate)     // イベント開始日が検索終了日以前
                 ->orderBy('start_date', 'asc')
                 ->get();
 
