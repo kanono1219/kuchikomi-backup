@@ -209,9 +209,21 @@ class CalendarController extends Controller
                 ->pluck('google_calendar_event_id')
                 ->toArray();
 
-            Log::info('Web app events in Google Calendar', [
+            Log::info('Web app events in Google Calendar (will be excluded)', [
+                'user_id' => $user->id,
                 'count' => count($webAppGoogleEventIds),
                 'event_ids' => $webAppGoogleEventIds
+            ]);
+
+            // デバッグ: 除外される前の全件数
+            $totalBeforeFilter = GoogleCalendarEvent::where('user_id', $user->id)
+                ->where('end_date', '>=', $startDate)
+                ->where('start_date', '<=', $endDate)
+                ->count();
+
+            Log::info('Google Calendar events before filtering', [
+                'user_id' => $user->id,
+                'count_before_filter' => $totalBeforeFilter
             ]);
 
             // より簡単なフィルタリング: イベントが表示範囲と重なっているものを取得
@@ -223,13 +235,15 @@ class CalendarController extends Controller
                 ->orderBy('start_date', 'asc')
                 ->get();
 
-            Log::info('Google Calendar events filtered by date range', [
+            Log::info('Google Calendar events after filtering duplicates', [
                 'user_id' => $user->id,
-                'filtered_count' => $googleEvents->count(),
+                'count_before_filter' => $totalBeforeFilter,
+                'count_after_filter' => $googleEvents->count(),
+                'excluded_count' => $totalBeforeFilter - $googleEvents->count(),
                 'requested_start' => $startDate->toDateTimeString(),
                 'requested_end' => $endDate->toDateTimeString(),
-                'filtered_event_ids' => $googleEvents->pluck('id')->toArray(),
-                'filtered_event_names' => $googleEvents->pluck('name')->toArray()
+                'remaining_event_ids' => $googleEvents->pluck('google_event_id')->toArray(),
+                'remaining_event_names' => $googleEvents->pluck('name')->toArray()
             ]);
 
             // FullCalendar フォーマットに変換

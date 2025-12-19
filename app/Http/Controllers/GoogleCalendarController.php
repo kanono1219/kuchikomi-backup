@@ -681,6 +681,18 @@ class GoogleCalendarController extends Controller
             foreach ($googleEvents as $googleEvent) {
                 $googleEventId = $googleEvent->getId();
 
+                // ★重要★ webアプリのイベントで既に追加済みか確認
+                // webアプリのイベントがGoogleカレンダーに追加されている場合はスキップ
+                $webAppEvent = Event::where('google_calendar_event_id', $googleEventId)->first();
+                if ($webAppEvent) {
+                    Log::info('Skipping event already in web app', [
+                        'google_event_id' => $googleEventId,
+                        'web_app_event_id' => $webAppEvent->id,
+                        'event_name' => $webAppEvent->name
+                    ]);
+                    continue; // webアプリのイベントは重複を避けてスキップ
+                }
+
                 // 既にインポート済みか確認
                 $existingEvent = GoogleCalendarEvent::where('google_event_id', $googleEventId)
                     ->where('user_id', $user->id)
