@@ -365,43 +365,56 @@
                     
                     <div class="space-y-6">
                         <div class="bg-white rounded-xl shadow-lg p-6">
-                            <h3 class="font-bold text-lg text-gray-800 mb-4">📌 カテゴリー別</h3>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                                    <div class="w-3 h-3 rounded" style="background-color: #FF6B6B;"></div>
-                                    <span class="text-gray-700">祭り</span>
-                                </div>
-                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                                    <div class="w-3 h-3 rounded" style="background-color: #9B59B6;"></div>
-                                    <span class="text-gray-700">音楽イベント</span>
-                                </div>
-                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                                    <div class="w-3 h-3 rounded" style="background-color: #3498DB;"></div>
-                                    <span class="text-gray-700">展示会</span>
-                                </div>
-                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                                    <div class="w-3 h-3 rounded" style="background-color: #2ECC71;"></div>
-                                    <span class="text-gray-700">スポーツイベント</span>
-                                </div>
-                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                                    <div class="w-3 h-3 rounded" style="background-color: #F39C12;"></div>
-                                    <span class="text-gray-700">式典</span>
-                                </div>
-                                <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50">
-                                    <div class="w-3 h-3 rounded" style="background-color: #95A5A6;"></div>
-                                    <span class="text-gray-700">RSS配信</span>
-                                </div>
-                                @auth
-                                    @if(auth()->user()->google_calendar_connected)
-                                    <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 border-t mt-3 pt-3">
-                                        <div class="w-3 h-3 rounded" style="background-color: #FF8C00;"></div>
-                                        <span class="text-gray-700 font-semibold">📅 Google Calendar予定</span>
+                            <h3 class="font-bold text-lg text-gray-800 mb-4">📌 凡例</h3>
+
+                            <!-- カテゴリー別の色 -->
+                            <div class="mb-4">
+                                <h4 class="text-sm font-semibold text-gray-600 mb-2">カテゴリー別</h4>
+                                <div class="grid grid-cols-1 gap-2 text-sm">
+                                    <div class="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50">
+                                        <div class="w-3 h-3 rounded" style="background-color: #9C27B0;"></div>
+                                        <span class="text-gray-700">祭り</span>
                                     </div>
-                                    @endif
-                                @endauth
+                                    <div class="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50">
+                                        <div class="w-3 h-3 rounded" style="background-color: #E91E63;"></div>
+                                        <span class="text-gray-700">音楽イベント</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50">
+                                        <div class="w-3 h-3 rounded" style="background-color: #2196F3;"></div>
+                                        <span class="text-gray-700">展示会</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50">
+                                        <div class="w-3 h-3 rounded" style="background-color: #4CAF50;"></div>
+                                        <span class="text-gray-700">スポーツイベント</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50">
+                                        <div class="w-3 h-3 rounded" style="background-color: #FF9800;"></div>
+                                        <span class="text-gray-700">式典</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50">
+                                        <div class="w-3 h-3 rounded" style="background-color: #607D8B;"></div>
+                                        <span class="text-gray-700">RSS配信</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="mt-4 pt-4 border-t border-gray-200">
-                                <p class="text-xs text-gray-500">💡 お気に入りは濃い色で表示</p>
+
+                            <!-- 特別な表示 -->
+                            <div class="border-t pt-3">
+                                <h4 class="text-sm font-semibold text-gray-600 mb-2">特別な表示</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50">
+                                        <div class="w-3 h-3 rounded" style="background-color: #FF6B6B;"></div>
+                                        <span class="text-gray-700">❤️ お気に入い</span>
+                                    </div>
+                                    @auth
+                                        @if(auth()->user()->google_calendar_connected)
+                                        <div class="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50">
+                                            <div class="w-3 h-3 rounded" style="background-color: #FF8C00;"></div>
+                                            <span class="text-gray-700">📅 Google Calendar</span>
+                                        </div>
+                                        @endif
+                                    @endauth
+                                </div>
                             </div>
                         </div>
 
@@ -416,61 +429,7 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Google Calendar セクション -->
-            <div class="mb-16">
-                <h2 class="section-title mb-8">🔗 Google カレンダーと連携</h2>
-
-                <div class="bg-white rounded-xl shadow-lg p-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <div>
-                            <h3 class="text-2xl font-bold text-gray-800 mb-2">Google Calendar の予定を表示</h3>
-                            <p class="text-gray-600">
-                                Google Calendar に登録された予定がこのカレンダーに表示されます
-                            </p>
-                        </div>
-                        <div id="calendarStatus" class="text-center">
-                            @auth
-                                @if(auth()->user()->google_calendar_connected)
-                                    <div class="text-green-600 font-bold mb-3">
-                                        ✓ 接続済み
-                                    </div>
-                                    <form action="{{ route('google-calendar.disconnect') }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600" onclick="return confirm('Google Calendar との接続を解除しますか？')">
-                                            接続を解除
-                                        </button>
-                                    </form>
-                                @else
-                                    <div class="text-gray-600 font-bold mb-3">
-                                        未接続
-                                    </div>
-                                    <a href="{{ route('google-calendar.authenticate') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                                        Google と接続
-                                    </a>
-                                @endif
-                            @else
-                                <div class="text-gray-600 font-bold mb-3">
-                                    ログインが必要です
-                                </div>
-                                <a href="{{ route('login') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                                    ログイン
-                                </a>
-                            @endauth
-                        </div>
-                    </div>
-
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 class="font-bold text-blue-800 mb-2">📌 使い方</h4>
-                        <ul class="text-blue-700 text-sm space-y-1">
-                            <li>✅ 1. 「Google と接続」ボタンをクリック</li>
-                            <li>✅ 2. Googleアカウントでログイン</li>
-                            <li>✅ 3. Google Calendar の予定がカレンダーに表示されます（📅 オレンジ色）</li>
-                            <li>✅ 4. イベントと個人の予定を一緒に確認できます</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            
 
             <!-- 最新のイベント -->
             <div class="mb-16">
