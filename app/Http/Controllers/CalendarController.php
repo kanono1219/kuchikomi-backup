@@ -93,16 +93,23 @@ class CalendarController extends Controller
                         ->where('event_id', $event->id)
                         ->exists() : false;
 
+                    // カテゴリーに応じた色を決定
+                    $categoryColor = $this->getCategoryColor($event->category->name ?? '');
+
+                    // お気に入りの場合は赤色、それ以外はカテゴリー色
+                    $eventColor = $isFavorited ? '#FF6B6B' : $categoryColor;
+
                     // イベントデータを FullCalendar フォーマットに変換
                     return [
                         'id' => (string)$event->id,
                         'title' => $event->name,
                         'start' => $event->start_date ? Carbon::parse($event->start_date)->format('Y-m-d\TH:i:s') : null,
                         'end' => $event->end_date ? Carbon::parse($event->end_date)->format('Y-m-d\TH:i:s') : null,
-                        'color' => $isFavorited ? '#FF6B6B' : '#4ECDC4', // Red for favorited, teal for normal
+                        'color' => $eventColor,
                         'extendedProps' => [
                             'type' => 'app_event',
                             'category' => $event->category->name ?? '',
+                            'categoryColor' => $categoryColor,
                             'location' => $event->location ?? '',
                             'description' => $event->overview ?? '',
                             'image' => $event->image_url ?? null,
@@ -317,5 +324,22 @@ class CalendarController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * カテゴリー名に応じた色を取得
+     */
+    private function getCategoryColor($categoryName)
+    {
+        $colors = [
+            '祭り' => '#9C27B0',        // 紫色
+            '音楽イベント' => '#E91E63',  // ピンク色
+            '展示会' => '#2196F3',      // 青色
+            'スポーツイベント' => '#4CAF50', // 緑色
+            '式典' => '#FF9800',        // オレンジ色
+            'RSS配信' => '#607D8B',     // グレー色
+        ];
+
+        return $colors[$categoryName] ?? '#4ECDC4'; // デフォルトはティール色
     }
 }
