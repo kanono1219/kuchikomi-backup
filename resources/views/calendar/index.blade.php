@@ -63,30 +63,59 @@
                 <!-- ===== 凡例 ===== -->
                 <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
                     <h3 class="text-xl font-bold text-gray-800 mb-4">凡例</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-{{ Auth::check() && Auth::user()->google_calendar_connected ? '3' : '2' }} gap-6">
-                        <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 rounded" style="background-color: #4ECDC4;"></div>
-                            <div>
-                                <p class="font-semibold text-gray-800">通常のイベント</p>
-                                <p class="text-sm text-gray-600">webアプリに登録されたイベント</p>
+
+                    <!-- カテゴリー別の色 -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-3">カテゴリー別</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-5 h-5 rounded" style="background-color: #9C27B0;"></div>
+                                <p class="text-sm text-gray-700">祭り</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-5 h-5 rounded" style="background-color: #E91E63;"></div>
+                                <p class="text-sm text-gray-700">音楽イベント</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-5 h-5 rounded" style="background-color: #2196F3;"></div>
+                                <p class="text-sm text-gray-700">展示会</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-5 h-5 rounded" style="background-color: #4CAF50;"></div>
+                                <p class="text-sm text-gray-700">スポーツイベント</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-5 h-5 rounded" style="background-color: #FF9800;"></div>
+                                <p class="text-sm text-gray-700">式典</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-5 h-5 rounded" style="background-color: #607D8B;"></div>
+                                <p class="text-sm text-gray-700">RSS配信</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 rounded" style="background-color: #FF6B6B;"></div>
-                            <div>
-                                <p class="font-semibold text-gray-800">お気に入いイベント</p>
-                                <p class="text-sm text-gray-600">あなたがお気に入いに追加したイベント</p>
+                    </div>
+
+                    <!-- 特別な表示 -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-700 mb-3">特別な表示</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-{{ Auth::check() && Auth::user()->google_calendar_connected ? '2' : '1' }} gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-6 h-6 rounded" style="background-color: #FF6B6B;"></div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">お気に入いイベント</p>
+                                    <p class="text-sm text-gray-600">あなたがお気に入いに追加したイベント</p>
+                                </div>
                             </div>
-                        </div>
-                        @if(Auth::check() && Auth::user()->google_calendar_connected)
-                        <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 rounded" style="background-color: #FF8C00;"></div>
-                            <div>
-                                <p class="font-semibold text-gray-800">Google Calendarイベント</p>
-                                <p class="text-sm text-gray-600">Google Calendarから同期したイベント</p>
+                            @if(Auth::check() && Auth::user()->google_calendar_connected)
+                            <div class="flex items-center gap-3">
+                                <div class="w-6 h-6 rounded" style="background-color: #FF8C00;"></div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">Google Calendarイベント</p>
+                                    <p class="text-sm text-gray-600">Google Calendarから同期したイベント</p>
+                                </div>
                             </div>
+                            @endif
                         </div>
-                        @endif
                     </div>
                 </div>
 
