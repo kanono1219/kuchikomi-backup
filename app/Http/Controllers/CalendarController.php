@@ -105,7 +105,9 @@ class CalendarController extends Controller
                         'title' => $event->name,
                         'start' => $event->start_date ? Carbon::parse($event->start_date)->format('Y-m-d\TH:i:s') : null,
                         'end' => $event->end_date ? Carbon::parse($event->end_date)->format('Y-m-d\TH:i:s') : null,
-                        'color' => $eventColor,
+                        'backgroundColor' => $eventColor,
+                        'borderColor' => $eventColor,
+                        'textColor' => '#FFFFFF',
                         'extendedProps' => [
                             'type' => 'app_event',
                             'category' => $event->category->name ?? '',
@@ -260,7 +262,9 @@ class CalendarController extends Controller
                     'title' => $event->name,
                     'start' => $event->start_date ? $event->start_date->format('Y-m-d\TH:i:s') : null,
                     'end' => $event->end_date ? $event->end_date->format('Y-m-d\TH:i:s') : null,
-                    'color' => '#FF8C00', // Orange for Google Calendar
+                    'backgroundColor' => '#FF8C00', // Orange for Google Calendar
+                    'borderColor' => '#FF8C00',
+                    'textColor' => '#FFFFFF',
                     'extendedProps' => [
                         'type' => 'google_calendar',
                         'description' => $event->description ?? '',
