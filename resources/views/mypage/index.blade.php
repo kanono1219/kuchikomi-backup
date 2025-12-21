@@ -332,8 +332,8 @@
                                                                 @csrf
                                                                 <input type="hidden" name="user_id" value="{{ $participant->id }}">
                                                                 <input type="hidden" name="status" value="approved">
-                                                                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition duration-200">
-                                                                    承認
+                                                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-semibold transition duration-200 shadow-md hover:shadow-lg border border-green-700">
+                                                                    ✓ 承認
                                                                 </button>
                                                             </form>
                                                             <form action="{{ route('events.buddy-posts.respond', [
@@ -343,8 +343,8 @@
                                                                 @csrf
                                                                 <input type="hidden" name="user_id" value="{{ $participant->id }}">
                                                                 <input type="hidden" name="status" value="rejected">
-                                                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition duration-200">
-                                                                    拒否
+                                                                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-semibold transition duration-200 shadow-md hover:shadow-lg border border-red-700">
+                                                                    ✗ 拒否
                                                                 </button>
                                                             </form>
                                                         @endif
