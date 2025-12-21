@@ -170,9 +170,13 @@
                                 <div class="flex justify-between items-start mb-3">
                                     <div>
                                         <h5 class="font-semibold text-lg text-gray-800">{{ $post->title }}</h5>
-                                        <a href="{{ route('events.show', $post->event_id) }}" class="text-sm text-blue-600 hover:text-blue-800">
-                                            {{ $post->event->name }}
-                                        </a>
+                                        @if($post->event)
+                                            <a href="{{ route('events.show', $post->event_id) }}" class="text-sm text-blue-600 hover:text-blue-800">
+                                                {{ $post->event->name }}
+                                            </a>
+                                        @else
+                                            <span class="text-sm text-gray-500">イベントが削除されました</span>
+                                        @endif
                                     </div>
                                     <span class="px-3 py-1 rounded-full text-sm {{ $post->status === 'open' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                         {{ $post->status === 'open' ? '募集中' : '募集終了' }}
@@ -270,9 +274,13 @@
                                 <div class="flex justify-between items-start mb-3">
                                     <div>
                                         <h5 class="font-semibold text-lg text-gray-800">{{ $post->title }}</h5>
-                                        <a href="{{ route('events.show', $post->event_id) }}" class="text-sm text-blue-600 hover:text-blue-800">
-                                            {{ $post->event->name }}
-                                        </a>
+                                        @if($post->event)
+                                            <a href="{{ route('events.show', $post->event_id) }}" class="text-sm text-blue-600 hover:text-blue-800">
+                                                {{ $post->event->name }}
+                                            </a>
+                                        @else
+                                            <span class="text-sm text-gray-500">イベントが削除されました</span>
+                                        @endif
                                     </div>
                                     <span class="px-3 py-1 rounded-full text-sm
                                         @if($post->pivot->status === 'pending')
@@ -282,18 +290,20 @@
                                         @else
                                             bg-red-100 text-red-800
                                         @endif">
-                                        {{ $post->pivot->status === 'pending' ? '保留中' : 
+                                        {{ $post->pivot->status === 'pending' ? '保留中' :
                                            ($post->pivot->status === 'approved' ? '承認済み' : '拒否済み') }}
                                     </span>
                                 </div>
 
                                 <!-- アクションボタン -->
                                 <div class="flex justify-end space-x-2">
-                                    <a href="{{ route('events.show', $post->event_id) }}" 
-                                       class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm transition duration-200">
-                                        詳細を見る
-                                    </a>
-                                    
+                                    @if($post->event)
+                                        <a href="{{ route('events.show', $post->event_id) }}"
+                                           class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm transition duration-200">
+                                            詳細を見る
+                                        </a>
+                                    @endif
+
                                     <!-- チャットボタン - statusによる条件分岐を削除 -->
                                     <form action="{{ route('buddy-posts.chat.create', $post) }}" method="POST" class="inline">
                                         @csrf
@@ -338,10 +348,12 @@
                                         </h4>
 
                                         <div class="flex items-center mb-3">
-                                            <a href="/categories/{{ $event->category->id }}" 
-                                               class="text-sm text-blue-600 bg-blue-100 rounded-full px-3 py-1 mr-2 hover:bg-blue-200 transition duration-300">
-                                                {{ $event->category->name }}
-                                            </a>
+                                            @if($event->category)
+                                                <a href="/categories/{{ $event->category->id }}"
+                                                   class="text-sm text-blue-600 bg-blue-100 rounded-full px-3 py-1 mr-2 hover:bg-blue-200 transition duration-300">
+                                                    {{ $event->category->name }}
+                                                </a>
+                                            @endif
                                             <div class="flex items-center">
                                                 <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>

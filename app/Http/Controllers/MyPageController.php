@@ -15,6 +15,13 @@ class MyPageController extends Controller
     {
         $user = $request->user();
 
+        // Eager load relationships to prevent N+1 queries
+        $user->load([
+            'buddyPosts.event',
+            'buddyPosts.participants',
+            'participatingBuddyPosts.event'
+        ]);
+
         // Google Calendar 自動同期
         $syncResult = null;
         if ($user->google_calendar_connected && $user->google_calendar_token) {
@@ -40,6 +47,7 @@ class MyPageController extends Controller
         }
 
         $favoriteEvents = $user->favoriteEvents()
+            ->with('category')
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->orderBy('events.start_date', 'desc')
