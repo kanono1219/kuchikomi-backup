@@ -13,6 +13,7 @@ use App\Http\Controllers\BuddyPostController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\RssImporterController;
+use App\Http\Controllers\RssFeedController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -157,6 +158,13 @@ Route::middleware('auth')->prefix('rss-importer')->name('rss-importer.')->group(
     Route::get('/', [RssImporterController::class, 'index'])->name('index');
     Route::post('/preview', [RssImporterController::class, 'preview'])->name('preview');
     Route::post('/import', [RssImporterController::class, 'import'])->name('import');
+});
+
+// ========== 管理者専用ルート（管理者権限必須） ==========
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    // RSS配信管理
+    Route::resource('rss-feeds', RssFeedController::class);
+    Route::post('/rss-feeds/{rssFeed}/fetch', [RssFeedController::class, 'fetch'])->name('rss-feeds.fetch');
 });
 
 // ========== Breeze 認証ルート ==========

@@ -20,6 +20,7 @@ class User extends Authenticatable
         'notification_days_before',
         'google_calendar_token',
         'google_calendar_connected',
+        'is_admin',
     ];
 
     protected $hidden = [
@@ -30,6 +31,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'google_calendar_connected' => 'boolean',
+        'is_admin' => 'boolean',
     ];
 
     public function favoriteEvents(): BelongsToMany
