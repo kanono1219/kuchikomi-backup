@@ -151,10 +151,10 @@
                 </div>
             </div>
 
-            <!-- 参加者募集の管理 -->
+            <!-- 一緒に参加してくれる人募集の管理 -->
             <div class="bg-white overflow-hidden shadow-lg rounded-xl mb-8">
                 <div class="p-6">
-                    <h3 class="text-2xl font-bold mb-6 text-gray-800">{{ __('参加者募集の管理') }}</h3>
+                    <h3 class="text-2xl font-bold mb-6 text-gray-800">{{ __('一緒に参加してくれる人募集の管理') }}</h3>
             
                     <!-- 投稿した募集 -->
                     <div class="mb-8">
