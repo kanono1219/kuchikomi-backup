@@ -77,28 +77,28 @@ class="bg-white border-b border-gray-100">
 
                 <!-- デスクトップ天気情報 -->
                 <div class="hidden lg:flex lg:items-center lg:ml-6">
-                    <div class="flex items-center bg-gray-50 rounded-lg px-3 py-2 shadow-sm" x-show="!weather.loading">
+                    <div class="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg px-4 py-2 shadow-md border border-blue-200" x-show="!weather.loading">
                         <!-- 現在の天気 -->
-                        <div class="flex items-center border-r border-gray-200 pr-3">
-                            <span class="text-sm font-medium text-gray-700">沖縄</span>
+                        <div class="flex items-center border-r border-blue-300 pr-4">
+                            <span class="text-sm font-bold text-blue-900">📍 沖縄</span>
                             <div class="flex items-center ml-2">
                                 <img :src="'https://openweathermap.org/img/wn/' + weather.current.icon + '.png'"
-                                     class="w-8 h-8" :alt="weather.current.description">
+                                     class="w-10 h-10 drop-shadow-md" :alt="weather.current.description">
                                 <div class="flex flex-col ml-1">
-                                    <span class="text-lg font-bold" x-text="weather.current.temp + '°'"></span>
-                                    <span class="text-xs text-gray-600" x-text="weather.current.description"></span>
+                                    <span class="text-xl font-bold text-blue-900" x-text="weather.current.temp + '°'"></span>
+                                    <span class="text-xs font-medium text-blue-700" x-text="weather.current.description"></span>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- 5日間予報 -->
-                        <div class="flex space-x-3 pl-3">
+                        <div class="flex space-x-3 pl-4">
                             <template x-for="(forecast, index) in weather.forecast" :key="index">
-                                <div class="flex flex-col items-center px-1">
-                                    <span class="text-xs font-medium text-gray-600" x-text="formatDate(forecast.date)"></span>
+                                <div class="flex flex-col items-center px-1 hover:bg-white hover:bg-opacity-50 rounded transition-colors">
+                                    <span class="text-xs font-semibold text-blue-800" x-text="formatDate(forecast.date)"></span>
                                     <img :src="'https://openweathermap.org/img/wn/' + forecast.icon + '.png'"
-                                         class="w-8 h-8" :alt="forecast.description">
-                                    <span class="text-sm font-medium" x-text="forecast.temp + '°'"></span>
+                                         class="w-8 h-8 drop-shadow" :alt="forecast.description">
+                                    <span class="text-sm font-bold text-blue-900" x-text="forecast.temp + '°'"></span>
                                 </div>
                             </template>
                         </div>
@@ -116,12 +116,12 @@ class="bg-white border-b border-gray-100">
 
             <!-- モバイル天気情報 -->
             <div class="lg:hidden flex items-center mr-4">
-                <div class="bg-gray-50 rounded-lg px-3 py-2 shadow-sm" x-show="!weather.loading">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg px-3 py-2 shadow-md border border-blue-200" x-show="!weather.loading">
                     <div class="flex items-center">
-                        <span class="text-sm font-medium text-gray-700 mr-2">沖縄</span>
+                        <span class="text-xs font-bold text-blue-900 mr-2">📍 沖縄</span>
                         <img :src="'https://openweathermap.org/img/wn/' + weather.current.icon + '.png'"
-                             class="w-8 h-8" :alt="weather.current.description">
-                        <span class="text-lg font-bold" x-text="weather.current.temp + '°'"></span>
+                             class="w-8 h-8 drop-shadow-md" :alt="weather.current.description">
+                        <span class="text-lg font-bold text-blue-900" x-text="weather.current.temp + '°'"></span>
                     </div>
                 </div>
                 <div x-show="weather.loading" class="flex items-center">
@@ -218,27 +218,27 @@ class="bg-white border-b border-gray-100">
             
             <!-- モバイル詳細天気情報 -->
             <div class="px-4 py-2">
-                <div class="bg-gray-50 rounded-lg p-3 shadow-sm" x-show="!weather.loading">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 shadow-md border border-blue-200" x-show="!weather.loading">
                     <!-- 現在の天気 -->
-                    <div class="flex items-center justify-center mb-3 pb-3 border-b border-gray-200">
-                        <span class="text-sm font-medium text-gray-700 mr-2">沖縄</span>
+                    <div class="flex items-center justify-center mb-3 pb-3 border-b border-blue-300">
+                        <span class="text-sm font-bold text-blue-900 mr-2">📍 沖縄</span>
                         <img :src="'https://openweathermap.org/img/wn/' + weather.current.icon + '@2x.png'"
-                             class="w-10 h-10" :alt="weather.current.description">
+                             class="w-12 h-12 drop-shadow-md" :alt="weather.current.description">
                         <div class="flex flex-col ml-2">
-                            <span class="text-xl font-bold" x-text="weather.current.temp + '°'"></span>
-                            <span class="text-sm text-gray-600" x-text="weather.current.description"></span>
+                            <span class="text-2xl font-bold text-blue-900" x-text="weather.current.temp + '°'"></span>
+                            <span class="text-sm font-medium text-blue-700" x-text="weather.current.description"></span>
                         </div>
                     </div>
-                
-                    
+
+
                     <!-- 5日間予報 -->
-                    <div class="flex flex-wrap justify-center gap-2">
+                    <div class="flex flex-wrap justify-center gap-3">
                         <template x-for="(forecast, index) in weather.forecast" :key="index">
-                            <div class="flex flex-col items-center p-1">
-                                <span class="text-xs text-gray-500" x-text="forecast.date"></span>
+                            <div class="flex flex-col items-center p-2 bg-white bg-opacity-50 rounded-lg">
+                                <span class="text-xs font-semibold text-blue-800" x-text="formatDate(forecast.date)"></span>
                                 <img :src="'http://openweathermap.org/img/wn/' + forecast.icon + '.png'"
-                                     class="w-6 h-6" :alt="forecast.description">
-                                <span class="text-xs" x-text="forecast.temp + '°C'"></span>
+                                     class="w-8 h-8 drop-shadow" :alt="forecast.description">
+                                <span class="text-sm font-bold text-blue-900" x-text="forecast.temp + '°'"></span>
                             </div>
                         </template>
                     </div>
