@@ -151,6 +151,104 @@
                 </div>
             </div>
 
+            <!-- RSS配信管理（管理者のみ） -->
+            @if(auth()->user()->is_admin && $rssFeeds !== null)
+            <div class="bg-white overflow-hidden shadow-lg rounded-xl mb-8">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-800">{{ __('RSS配信管理') }}</h3>
+                        <a href="{{ route('admin.rss-feeds.create') }}"
+                           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-200 inline-flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            新規登録
+                        </a>
+                    </div>
+
+                    @if($rssFeeds->count() > 0)
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            @foreach($rssFeeds as $feed)
+                                <div class="border rounded-lg p-4 hover:bg-gray-50 transition duration-200">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div class="flex-1">
+                                            <h4 class="font-semibold text-lg text-gray-800">{{ $feed->name }}</h4>
+                                            <p class="text-sm text-gray-500 truncate">{{ $feed->url }}</p>
+                                        </div>
+                                        @if($feed->is_active)
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                有効
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                無効
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <div class="mb-3">
+                                        @if($feed->category)
+                                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                                {{ $feed->category->name }}
+                                            </span>
+                                        @else
+                                            <span class="text-xs text-gray-400">カテゴリー未設定</span>
+                                        @endif
+                                    </div>
+
+                                    <div class="text-xs text-gray-500 mb-3">
+                                        最終取得: {{ $feed->last_fetched_at ? $feed->last_fetched_at->format('Y/m/d H:i') : '未取得' }}
+                                    </div>
+
+                                    <div class="flex space-x-2">
+                                        <form action="{{ route('admin.rss-feeds.fetch', $feed) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition duration-200"
+                                                    onclick="return confirm('RSSを取得しますか？')">
+                                                取得
+                                            </button>
+                                        </form>
+                                        <a href="{{ route('admin.rss-feeds.edit', $feed) }}"
+                                           class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition duration-200">
+                                            編集
+                                        </a>
+                                        <form action="{{ route('admin.rss-feeds.destroy', $feed) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition duration-200"
+                                                    onclick="return confirm('本当に削除しますか？')">
+                                                削除
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="{{ route('admin.rss-feeds.index') }}"
+                               class="text-blue-600 hover:text-blue-800 text-sm">
+                                すべてのRSS配信を管理 →
+                            </a>
+                        </div>
+                    @else
+                        <div class="text-center py-8">
+                            <p class="text-gray-500 mb-4">RSS配信が登録されていません。</p>
+                            <a href="{{ route('admin.rss-feeds.create') }}"
+                               class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-200">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                RSS配信を登録
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+            @endif
+
             <!-- 一緒に参加してくれる人募集の管理 -->
             <div class="bg-white overflow-hidden shadow-lg rounded-xl mb-8">
                 <div class="p-6">

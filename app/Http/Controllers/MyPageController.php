@@ -7,6 +7,7 @@ use Illuminate\View\View;
 use App\Models\User;
 use App\Models\Event;
 use App\Models\GoogleCalendarEvent;
+use App\Models\RssFeed;
 use Illuminate\Support\Facades\Log;
 
 class MyPageController extends Controller
@@ -59,11 +60,18 @@ class MyPageController extends Controller
             $googleCalendarEventsCount = GoogleCalendarEvent::where('user_id', $user->id)->count();
         }
 
+        // 管理者の場合、RSS配信情報を取得
+        $rssFeeds = null;
+        if ($user->is_admin) {
+            $rssFeeds = RssFeed::with('category')->orderBy('created_at', 'desc')->get();
+        }
+
         return view('mypage.index', [
             'user' => $user,
             'favoriteEvents' => $favoriteEvents,
             'syncResult' => $syncResult,
             'googleCalendarEventsCount' => $googleCalendarEventsCount,
+            'rssFeeds' => $rssFeeds,
         ]);
     }
 

@@ -291,8 +291,8 @@
                 @endauth
             </div>
 
-            <!-- RSS配信でイベントを作成 -->
-            @auth
+            <!-- RSS配信でイベントを作成（管理者のみ） -->
+            @if(auth()->check() && auth()->user()->is_admin)
             <div class="mb-16">
                 <div class="max-w-3xl mx-auto bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl shadow-lg p-8 border-2 border-orange-200">
                     <div class="flex items-start gap-6">
@@ -352,7 +352,7 @@
                     </div>
                 </div>
             </div>
-            @endauth
+            @endif
 
             <!-- カレンダーセクション -->
             <div class="mb-16">
@@ -391,10 +391,12 @@
                                         <div class="w-3 h-3 rounded" style="background-color: #FF9800;"></div>
                                         <span class="text-gray-700">式典</span>
                                     </div>
+                                    @if(auth()->check() && auth()->user()->is_admin)
                                     <div class="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50">
                                         <div class="w-3 h-3 rounded" style="background-color: #607D8B;"></div>
                                         <span class="text-gray-700">RSS配信</span>
                                     </div>
+                                    @endif
                                 </div>
                             </div>
 
