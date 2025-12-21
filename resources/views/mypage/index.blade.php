@@ -221,11 +221,11 @@
                                                             </button>
                                                         </form>
                                                     </div>
-                                                    
-                                                   @if($participant->pivot->status === 'pending')
+
+                                                    @if($participant->pivot->status === 'pending' && $post->event)
                                                         <div class="flex space-x-2">
                                                             <form action="{{ route('events.buddy-posts.respond', [
-                                                                    'event' => $post->event_id, 
+                                                                    'event' => $post->event_id,
                                                                     'buddyPost' => $post->id
                                                                 ]) }}" method="POST" class="inline">
                                                                 @csrf
@@ -236,7 +236,7 @@
                                                                 </button>
                                                             </form>
                                                             <form action="{{ route('events.buddy-posts.respond', [
-                                                                    'event' => $post->event_id, 
+                                                                    'event' => $post->event_id,
                                                                     'buddyPost' => $post->id
                                                                 ]) }}" method="POST" class="inline">
                                                                 @csrf
