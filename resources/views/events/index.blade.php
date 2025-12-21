@@ -57,13 +57,27 @@
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
         .weather-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 12px 20px;
+            padding: 14px 24px;
             border-radius: 50px;
-            color: white;
             display: inline-block;
-            font-size: 0.9rem;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            font-size: 1rem;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .weather-sunny {
+            background: linear-gradient(135deg, #FDB813 0%, #FF8C00 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(253, 184, 19, 0.5);
+        }
+        .weather-cloudy {
+            background: linear-gradient(135deg, #8B9DC3 0%, #5F6F94 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(139, 157, 195, 0.5);
+        }
+        .weather-rainy {
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.5);
         }
         .category-tag {
             display: inline-block;
@@ -150,24 +164,24 @@
             <!-- 天気情報セクション -->
             <div class="mb-12 text-center">
                 @if($weatherData['weather'] === 'sunny')
-                    <div class="inline-block weather-badge">
+                    <div class="inline-block weather-badge weather-sunny">
                         🌞 天気が良いので外のイベントがおすすめ！
                         @if($weatherData['temp'])
-                            <span class="ml-2 font-semibold">気温: {{ $weatherData['temp'] }}℃</span>
+                            <span class="ml-2 font-bold">気温: {{ $weatherData['temp'] }}℃</span>
                         @endif
                     </div>
                 @elseif($weatherData['weather'] === 'cloudy')
-                    <div class="inline-block weather-badge">
+                    <div class="inline-block weather-badge weather-cloudy">
                         ☁️ 曇りなので室内イベントがおすすめ！
                         @if($weatherData['temp'])
-                            <span class="ml-2 font-semibold">気温: {{ $weatherData['temp'] }}℃</span>
+                            <span class="ml-2 font-bold">気温: {{ $weatherData['temp'] }}℃</span>
                         @endif
                     </div>
                 @else
-                    <div class="inline-block weather-badge">
+                    <div class="inline-block weather-badge weather-rainy">
                         🌧️ 雨の日は室内イベントがおすすめ！
                         @if($weatherData['temp'])
-                            <span class="ml-2 font-semibold">気温: {{ $weatherData['temp'] }}℃</span>
+                            <span class="ml-2 font-bold">気温: {{ $weatherData['temp'] }}℃</span>
                         @endif
                     </div>
                 @endif
