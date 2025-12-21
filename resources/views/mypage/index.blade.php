@@ -286,42 +286,45 @@
                                         <h6 class="font-medium mb-3">参加リクエスト一覧</h6>
                                         <div class="space-y-2">
                                             @foreach($post->participants as $participant)
-                                                <div class="flex justify-between items-center bg-gray-50 p-3 rounded">
-                                                    <div>
-                                                        <span class="font-medium">{{ $participant->name }}</span>
-                                                        <span class="ml-2 text-sm px-2 py-1 rounded-full
-                                                            @if($participant->pivot->status === 'pending')
-                                                                bg-yellow-100 text-yellow-800
-                                                            @elseif($participant->pivot->status === 'approved')
-                                                                bg-green-100 text-green-800
-                                                            @else
-                                                                bg-red-100 text-red-800
-                                                            @endif">
-                                                            {{ $participant->pivot->status === 'pending' ? '保留中' : 
-                                                               ($participant->pivot->status === 'approved' ? '承認済み' : '拒否済み') }}
-                                                        </span>
+                                                <div class="bg-gray-50 p-3 rounded">
+                                                    <div class="flex justify-between items-start mb-2">
+                                                        <div>
+                                                            <span class="font-medium">{{ $participant->name }}</span>
+                                                            <span class="ml-2 text-sm px-2 py-1 rounded-full
+                                                                @if($participant->pivot->status === 'pending')
+                                                                    bg-yellow-100 text-yellow-800
+                                                                @elseif($participant->pivot->status === 'approved')
+                                                                    bg-green-100 text-green-800
+                                                                @else
+                                                                    bg-red-100 text-red-800
+                                                                @endif">
+                                                                {{ $participant->pivot->status === 'pending' ? '保留中' :
+                                                                   ($participant->pivot->status === 'approved' ? '承認済み' : '拒否済み') }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
 
-                                                        <!-- チャットボタン - statusによる条件分岐を削除 -->
-                                                        <form action="{{ route('buddy-posts.chat.create', $post) }}" method="POST" class="inline ml-2">
+                                                    <div class="flex flex-wrap gap-2">
+                                                        <!-- チャットボタン -->
+                                                        <form action="{{ route('buddy-posts.chat.create', $post) }}" method="POST" class="inline">
                                                             @csrf
                                                             <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition duration-200 inline-flex items-center">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" 
-                                                                     class="h-4 w-4 mr-1" 
-                                                                     fill="none" 
-                                                                     viewBox="0 0 24 24" 
+                                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                                     class="h-4 w-4 mr-1"
+                                                                     fill="none"
+                                                                     viewBox="0 0 24 24"
                                                                      stroke="currentColor">
-                                                                    <path stroke-linecap="round" 
-                                                                          stroke-linejoin="round" 
-                                                                          stroke-width="2" 
+                                                                    <path stroke-linecap="round"
+                                                                          stroke-linejoin="round"
+                                                                          stroke-width="2"
                                                                           d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                                                 </svg>
                                                                 チャット
                                                             </button>
                                                         </form>
-                                                    </div>
 
-                                                    @if($participant->pivot->status === 'pending' && $post->event)
-                                                        <div class="flex space-x-2">
+                                                        <!-- 承認/拒否ボタン（保留中かつイベントが存在する場合のみ表示） -->
+                                                        @if($participant->pivot->status === 'pending' && $post->event)
                                                             <form action="{{ route('events.buddy-posts.respond', [
                                                                     'event' => $post->event_id,
                                                                     'buddyPost' => $post->id
@@ -344,8 +347,8 @@
                                                                     拒否
                                                                 </button>
                                                             </form>
-                                                        </div>
-                                                    @endif
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             @endforeach
                                         </div>
