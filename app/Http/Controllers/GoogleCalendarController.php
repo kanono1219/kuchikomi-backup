@@ -474,8 +474,8 @@ class GoogleCalendarController extends Controller
             // Google Calendar API を初期化
             $service = new Calendar($this->client);
 
-            // 今日から3ヶ月後までのイベントを取得
-            $timeMin = new \DateTime('now', new \DateTimeZone('Asia/Tokyo'));
+            // ★修正★ 過去3ヶ月から未来3ヶ月までのイベントを取得（既存の予定も含む）
+            $timeMin = new \DateTime('-3 months', new \DateTimeZone('Asia/Tokyo'));
             $timeMax = new \DateTime('+3 months', new \DateTimeZone('Asia/Tokyo'));
 
             $optParams = [
@@ -659,8 +659,8 @@ class GoogleCalendarController extends Controller
             // Google Calendar API を初期化
             $service = new Calendar($this->client);
 
-            // 今日から3ヶ月後までのイベントを取得
-            $timeMin = new \DateTime('now', new \DateTimeZone('Asia/Tokyo'));
+            // ★修正★ 過去3ヶ月から未来3ヶ月までのイベントを取得（既存の予定も含む）
+            $timeMin = new \DateTime('-3 months', new \DateTimeZone('Asia/Tokyo'));
             $timeMax = new \DateTime('+3 months', new \DateTimeZone('Asia/Tokyo'));
 
             $optParams = [
