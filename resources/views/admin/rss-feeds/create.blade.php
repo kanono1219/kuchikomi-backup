@@ -6,9 +6,9 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-lg rounded-xl">
-                <div class="p-6">
+                <div class="p-8">
                     <form action="{{ route('admin.rss-feeds.store') }}" method="POST">
                         @csrf
 
