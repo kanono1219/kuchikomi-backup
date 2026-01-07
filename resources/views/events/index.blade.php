@@ -626,16 +626,38 @@
                             }
                             @endauth
 
-                            debugLog('合計イベント数', allEvents.length);
-                            debugLog('全イベント詳細', allEvents);
+                            debugLog('合計イベント数（重複除去前）', allEvents.length);
 
-                            if (allEvents.length === 0) {
+                            // ★重複除去★ タイトルと開始時刻が同じイベントは1つだけ残す
+                            const uniqueEvents = [];
+                            const eventKeys = new Set();
+
+                            allEvents.forEach(event => {
+                                // イベントの一意キーを作成（タイトル + 開始時刻）
+                                const key = `${event.title}_${event.start}`;
+
+                                if (!eventKeys.has(key)) {
+                                    eventKeys.add(key);
+                                    uniqueEvents.push(event);
+                                } else {
+                                    debugLog('重複イベントを除外', {
+                                        title: event.title,
+                                        start: event.start,
+                                        type: event.extendedProps?.type
+                                    });
+                                }
+                            });
+
+                            debugLog('合計イベント数（重複除去後）', uniqueEvents.length);
+                            debugLog('全イベント詳細', uniqueEvents);
+
+                            if (uniqueEvents.length === 0) {
                                 debugLog('⚠️ イベントが見つかりません');
                             } else {
                                 debugLog('✅ イベント取得成功');
                             }
 
-                            successCallback(allEvents);
+                            successCallback(uniqueEvents);
 
                         } catch (error) {
                             debugError('イベント取得エラー', error);

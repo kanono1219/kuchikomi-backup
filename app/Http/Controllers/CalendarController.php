@@ -214,8 +214,10 @@ class CalendarController extends Controller
 
             // ★重要★ webアプリのイベントで、Googleカレンダーに追加されているものを取得
             // これらのイベントは重複を避けるため除外する
-            $webAppGoogleEventIds = Event::whereNotNull('google_calendar_event_id')
+            $webAppGoogleEventIds = Event::where('user_id', $user->id)
+                ->whereNotNull('google_calendar_event_id')
                 ->pluck('google_calendar_event_id')
+                ->filter()  // null値を除外
                 ->toArray();
 
             Log::info('Web app events in Google Calendar (will be excluded)', [
@@ -235,14 +237,17 @@ class CalendarController extends Controller
                 'count_before_filter' => $totalBeforeFilter
             ]);
 
-            // より簡単なフィルタリング: イベントが表示範囲と重なっているものを取得
-            // ただし、webアプリのイベントと重複するものは除外
-            $googleEvents = GoogleCalendarEvent::where('user_id', $user->id)
+            // ★修正★ Googleカレンダーの個人的予定のみを取得（Webアプリのイベントと重複するものは除外）
+            $googleEventsQuery = GoogleCalendarEvent::where('user_id', $user->id)
                 ->where('end_date', '>=', $startDate)     // イベント終了日が検索開始日以降
-                ->where('start_date', '<=', $endDate)     // イベント開始日が検索終了日以前
-                ->whereNotIn('google_event_id', $webAppGoogleEventIds)  // ★重複除外★
-                ->orderBy('start_date', 'asc')
-                ->get();
+                ->where('start_date', '<=', $endDate);    // イベント開始日が検索終了日以前
+
+            // Webアプリのイベントと重複するものを除外
+            if (count($webAppGoogleEventIds) > 0) {
+                $googleEventsQuery->whereNotIn('google_event_id', $webAppGoogleEventIds);
+            }
+
+            $googleEvents = $googleEventsQuery->orderBy('start_date', 'asc')->get();
 
             Log::info('Google Calendar events after filtering duplicates', [
                 'user_id' => $user->id,
