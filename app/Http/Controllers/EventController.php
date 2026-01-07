@@ -231,6 +231,29 @@ class EventController extends Controller
     public function index()
     {
         try {
+            // ★追加★ Google Calendar 自動同期（認証済みユーザーのみ）
+            $user = Auth::user();
+            if ($user && $user->google_calendar_connected && $user->google_calendar_token) {
+                try {
+                    $googleCalendarController = new GoogleCalendarController();
+                    $syncResult = $googleCalendarController->autoSync();
+
+                    if ($syncResult['success'] && $syncResult['imported_count'] > 0) {
+                        Log::info('Auto-synced Google Calendar events on home page', [
+                            'user_id' => $user->id,
+                            'imported_count' => $syncResult['imported_count']
+                        ]);
+                        // 成功メッセージは表示しない（毎回表示されると煩雑になるため）
+                    }
+                } catch (Exception $e) {
+                    Log::error('Auto-sync failed on home page load', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage()
+                    ]);
+                    // エラーが発生してもページ表示は継続
+                }
+            }
+
             $events = Event::with('category')
                 ->withAvg('reviews', 'rating')
                 ->withCount('reviews')
