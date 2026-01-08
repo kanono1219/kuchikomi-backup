@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\GoogleCalendarEvent;
 use Carbon\Carbon;
-use Google\Client;
-use Google\Service\Calendar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -14,11 +13,60 @@ use Exception;
 class CalendarController extends Controller
 {
     /**
+     * カテゴリーごとの色マッピング
+     */
+    private function getCategoryColor($categoryName, $isFavorited = false)
+    {
+        $colors = [
+            '祭り' => '#FF6B6B',          // 赤
+            '音楽イベント' => '#9B59B6',   // 紫
+            '展示会' => '#3498DB',         // 青
+            'スポーツイベント' => '#2ECC71', // 緑
+            '式典' => '#F39C12',           // オレンジ
+            'RSS配信' => '#95A5A6',        // グレー
+        ];
+
+        // お気に入りの場合は少し濃い色にする
+        if ($isFavorited) {
+            $favoritedColors = [
+                '祭り' => '#E74C3C',
+                '音楽イベント' => '#8E44AD',
+                '展示会' => '#2980B9',
+                'スポーツイベント' => '#27AE60',
+                '式典' => '#D68910',
+                'RSS配信' => '#7F8C8D',
+            ];
+            return $favoritedColors[$categoryName] ?? '#E74C3C';
+        }
+
+        return $colors[$categoryName] ?? '#4ECDC4'; // デフォルトはティール
+    }
+
+    /**
      * カレンダービュー表示（認証不要）
      */
     public function index()
     {
         Log::info('Calendar index page loaded');
+
+        // Google Calendar 自動同期（認証済みユーザーのみ）
+        $user = Auth::user();
+        if ($user && $user->google_calendar_connected && $user->google_calendar_token) {
+            try {
+                $googleCalendarController = new GoogleCalendarController();
+                $syncResult = $googleCalendarController->autoSync();
+
+                if ($syncResult['success'] && $syncResult['imported_count'] > 0) {
+                    session()->flash('success', $syncResult['message']);
+                }
+            } catch (Exception $e) {
+                Log::error('Auto-sync failed on calendar page load', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
         return view('calendar.index');
     }
 
@@ -75,16 +123,19 @@ class CalendarController extends Controller
                         ->where('event_id', $event->id)
                         ->exists() : false;
 
+                    // カテゴリー名を取得
+                    $categoryName = $event->category->name ?? '';
+
                     // イベントデータを FullCalendar フォーマットに変換
                     return [
                         'id' => (string)$event->id,
                         'title' => $event->name,
                         'start' => $event->start_date ? Carbon::parse($event->start_date)->format('Y-m-d\TH:i:s') : null,
                         'end' => $event->end_date ? Carbon::parse($event->end_date)->format('Y-m-d\TH:i:s') : null,
-                        'color' => $isFavorited ? '#FF6B6B' : '#4ECDC4', // Red for favorited, teal for normal
+                        'color' => $this->getCategoryColor($categoryName, $isFavorited),
                         'extendedProps' => [
                             'type' => 'app_event',
-                            'category' => $event->category->name ?? '',
+                            'category' => $categoryName,
                             'location' => $event->location ?? '',
                             'description' => $event->overview ?? '',
                             'image' => $event->image_url ?? null,
@@ -116,7 +167,7 @@ class CalendarController extends Controller
     }
 
     /**
-     * Google Calendar からイベント取得（認証必須）
+     * Google Calendar イベント取得（ローカルDBから）（認証必須）
      */
     public function getGoogleCalendarEvents(Request $request)
     {
@@ -126,172 +177,90 @@ class CalendarController extends Controller
             // ユーザーが認証されていない場合
             if (!$user) {
                 Log::warning('User not authenticated for Google Calendar events');
-                return response()->json([
-                    'events' => [],
-                    'message' => 'User not authenticated'
-                ]);
+                return response()->json([]);
             }
 
             // ユーザーが Google Calendar に接続していない場合
             if (!$user->google_calendar_connected || !$user->google_calendar_token) {
                 Log::info('User not connected to Google Calendar', ['user_id' => $user->id]);
-                return response()->json([
-                    'events' => [],
-                    'message' => 'Google Calendar not connected'
-                ]);
+                return response()->json([]);
             }
 
-            $start = $request->get('start', now()->startOfDay()->toIso8601String());
-            $end = $request->get('end', now()->addMonths(3)->endOfDay()->toIso8601String());
+            $start = $request->get('start');
+            $end = $request->get('end');
 
-            Log::info('Fetching Google Calendar events', [
+            if (!$start || !$end) {
+                Log::warning('Missing required parameters for Google Calendar events', ['start' => $start, 'end' => $end]);
+                return response()->json([]);
+            }
+
+            Log::info('Fetching Google Calendar events from local DB', [
                 'user_id' => $user->id,
                 'start' => $start,
                 'end' => $end
             ]);
 
             try {
-                $service = $this->getCalendarService($user);
-
-                // Google Calendar からイベントを取得
-                $results = $service->events->listEvents('primary', [
-                    'timeMin' => (new \DateTime($start))->format(\DateTime::RFC3339),
-                    'timeMax' => (new \DateTime($end))->format(\DateTime::RFC3339),
-                    'maxResults' => 50,
-                    'orderBy' => 'startTime',
-                    'singleEvents' => true,
-                    'showDeleted' => false,
-                    'timeZone' => config('app.timezone', 'Asia/Tokyo')
-                ]);
-
-                $googleEvents = $results->getItems();
-
-                $events = collect($googleEvents)->map(function ($event) {
-                    $start = $event->getStart();
-                    $end = $event->getEnd();
-
-                    return [
-                        'id' => $event->getId(),
-                        'title' => $event->getSummary(),
-                        'start' => $start->getDateTime() ?? $start->getDate(),
-                        'end' => $end->getDateTime() ?? $end->getDate(),
-                        'color' => '#FF8C00', // Orange for Google Calendar
-                        'extendedProps' => [
-                            'type' => 'google_calendar',
-                            'description' => $event->getDescription() ?? '',
-                            'location' => $event->getLocation() ?? '',
-                        ]
-                    ];
-                });
-
-                Log::info('Google Calendar events fetched successfully', [
-                    'user_id' => $user->id,
-                    'count' => $events->count()
-                ]);
-
-                return response()->json($events->values());
-
+                $startDate = new \DateTime($start);
+                $endDate = new \DateTime($end);
             } catch (Exception $e) {
-                Log::error('Google Calendar API error', [
-                    'user_id' => $user->id,
-                    'error' => $e->getMessage()
-                ]);
-
-                // Google Calendar エラーの場合は空配列を返す
-                return response()->json([
-                    'events' => [],
-                    'message' => 'Failed to fetch Google Calendar events'
-                ]);
+                Log::error('Invalid date format for Google Calendar events', ['start' => $start, 'end' => $end, 'error' => $e->getMessage()]);
+                return response()->json([]);
             }
 
+            // ローカルDBからGoogleカレンダーの予定を取得
+            // まず、全レコード数を確認
+            $totalCount = GoogleCalendarEvent::where('user_id', $user->id)->count();
+            Log::info('Total Google Calendar events in DB', [
+                'user_id' => $user->id,
+                'total_count' => $totalCount
+            ]);
+
+            // より簡単なフィルタリング: イベントが表示範囲と重なっているものを取得
+            $googleEvents = GoogleCalendarEvent::where('user_id', $user->id)
+                ->where('end_date', '>=', $startDate)     // イベント終了日が検索開始日以降
+                ->where('start_date', '<=', $endDate)     // イベント開始日が検索終了日以前
+                ->orderBy('start_date', 'asc')
+                ->get();
+
+            Log::info('Google Calendar events filtered by date range', [
+                'user_id' => $user->id,
+                'filtered_count' => $googleEvents->count(),
+                'start' => $startDate->format('Y-m-d'),
+                'end' => $endDate->format('Y-m-d')
+            ]);
+
+            $googleEvents = $googleEvents->map(function ($event) {
+                return [
+                    'id' => 'gc_' . $event->id, // Prefix to distinguish from app events
+                    'title' => $event->name,
+                    'start' => $event->start_date ? Carbon::parse($event->start_date)->format('Y-m-d\TH:i:s') : null,
+                    'end' => $event->end_date ? Carbon::parse($event->end_date)->format('Y-m-d\TH:i:s') : null,
+                    'color' => '#FF8C00', // Orange for Google Calendar
+                    'extendedProps' => [
+                        'type' => 'google_calendar',
+                        'description' => $event->description ?? '',
+                        'location' => $event->location ?? '',
+                        'html_link' => $event->html_link ?? '',
+                    ]
+                ];
+            });
+
+            Log::info('Google Calendar events mapped successfully', [
+                'user_id' => $user->id,
+                'count' => $googleEvents->count()
+            ]);
+
+            return response()->json($googleEvents->values());
+
         } catch (Exception $e) {
-            Log::error('Failed to fetch Google Calendar events', [
+            Log::error('Failed to fetch Google Calendar events from local DB', [
                 'user_id' => Auth::id() ?? 'guest',
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return response()->json([
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Google Calendar サービス取得
-     */
-    private function getCalendarService($user)
-    {
-        try {
-            $client = new Client();
-            $client->setApplicationName('Okinawa Event App');
-            $client->setScopes([
-                'https://www.googleapis.com/auth/calendar.readonly',
-                'https://www.googleapis.com/auth/calendar'
-            ]);
-
-            // Google Calendar config を読み込み
-            $configPath = config_path('google-calendar-config.json');
-
-            if (!file_exists($configPath)) {
-                Log::error('Google Calendar config not found', ['path' => $configPath]);
-                throw new Exception('Google Calendar config not configured');
-            }
-
-            $client->setAuthConfig($configPath);
-
-            // ユーザーのトークンを設定
-            if (!$user->google_calendar_token) {
-                throw new Exception('User has no Google Calendar token');
-            }
-
-            $tokenData = json_decode($user->google_calendar_token, true);
-
-            if (!is_array($tokenData)) {
-                Log::error('Invalid token data format', ['user_id' => $user->id]);
-                throw new Exception('Invalid token format');
-            }
-
-            $client->setAccessToken($tokenData);
-
-            // トークンが期限切れの場合は自動更新
-            if ($client->isAccessTokenExpired()) {
-                Log::info('Google Calendar token expired, refreshing...', ['user_id' => $user->id]);
-
-                $refreshToken = $tokenData['refresh_token'] ?? null;
-
-                if ($refreshToken) {
-                    try {
-                        $client->fetchAccessTokenWithRefreshToken($refreshToken);
-                        $newToken = $client->getAccessToken();
-
-                        // DB に新しいトークンを保存
-                        $user->update([
-                            'google_calendar_token' => json_encode($newToken)
-                        ]);
-
-                        Log::info('Google Calendar token refreshed successfully', ['user_id' => $user->id]);
-                    } catch (Exception $e) {
-                        Log::error('Token refresh failed', [
-                            'user_id' => $user->id,
-                            'error' => $e->getMessage()
-                        ]);
-                        throw $e;
-                    }
-                } else {
-                    Log::warning('No refresh token available', ['user_id' => $user->id]);
-                    throw new Exception('No refresh token available');
-                }
-            }
-
-            return new Calendar($client);
-
-        } catch (Exception $e) {
-            Log::error('Failed to initialize Calendar service', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage()
-            ]);
-            throw $e;
+            return response()->json([]);
         }
     }
 

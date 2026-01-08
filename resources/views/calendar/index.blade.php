@@ -59,6 +59,17 @@
                                 <p class="text-gray-600 text-sm mt-1">Google Calendar を接続するとお気に入いイベントが自動同期されます</p>
                             @endif
                         </div>
+                        <div>
+                            @if(!Auth::user()->google_calendar_connected)
+                                <a href="{{ route('google-calendar.authenticate') }}"
+                                   class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 inline-flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Google と連携
+                                </a>
+                            @endif
+                        </div>
                     </div>
                 </div>
                 @endauth
@@ -78,29 +89,41 @@
 
                 <!-- ===== 凡例 ===== -->
                 <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">凡例</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 rounded" style="background-color: #4ECDC4;"></div>
-                            <div>
-                                <p class="font-semibold text-gray-800">通常のイベント</p>
-                                <p class="text-sm text-gray-600">webアプリに登録されたイベント</p>
-                            </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">凡例 - カテゴリー別</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded" style="background-color: #FF6B6B;"></div>
+                            <p class="text-sm text-gray-700">祭り</p>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 rounded" style="background-color: #FF6B6B;"></div>
-                            <div>
-                                <p class="font-semibold text-gray-800">お気に入いイベント</p>
-                                <p class="text-sm text-gray-600">あなたがお気に入いに追加したイベント</p>
-                            </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded" style="background-color: #9B59B6;"></div>
+                            <p class="text-sm text-gray-700">音楽イベント</p>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 rounded" style="background-color: #FF8C00;"></div>
-                            <div>
-                                <p class="font-semibold text-gray-800">Google Calendarイベント</p>
-                                <p class="text-sm text-gray-600">Google Calendarから同期したイベント</p>
-                            </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded" style="background-color: #3498DB;"></div>
+                            <p class="text-sm text-gray-700">展示会</p>
                         </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded" style="background-color: #2ECC71;"></div>
+                            <p class="text-sm text-gray-700">スポーツイベント</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded" style="background-color: #F39C12;"></div>
+                            <p class="text-sm text-gray-700">式典</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded" style="background-color: #95A5A6;"></div>
+                            <p class="text-sm text-gray-700">RSS配信</p>
+                        </div>
+                        @if(Auth::check() && Auth::user()->google_calendar_connected)
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded" style="background-color: #FF8C00;"></div>
+                            <p class="text-sm text-gray-700">Google Calendar予定</p>
+                        </div>
+                        @endif
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <p class="text-xs text-gray-500">💡 お気に入りのイベントは濃い色で表示されます</p>
                     </div>
                 </div>
 
@@ -212,36 +235,48 @@
                         debugLog('アプリイベント取得数', appEvents.length);
                         allEvents.push(...appEvents);
 
-                        // 2. Google Calendar イベントを取得（認証済みユーザーのみ）
+                        // 2. Google Calendar 予定を取得（認証済みユーザーのみ）
                         @auth
                         try {
                             const googleUrl = `/calendar/google-events?start=${info.start.toISOString()}&end=${info.end.toISOString()}`;
-                            debugLog('GoogleカレンダーAPI URL', googleUrl);
+                            debugLog('🔍 GoogleカレンダーAPI URL', googleUrl);
 
                             const googleResponse = await fetch(googleUrl, {
                                 headers: {
                                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                                 }
                             });
-                            debugLog('Googleカレンダーレスポンスステータス', googleResponse.status);
+                            debugLog('📡 Googleカレンダーレスポンスステータス', googleResponse.status);
 
                             if (googleResponse.ok) {
                                 const googleData = await googleResponse.json();
+                                debugLog('📦 Googleカレンダー生データ', googleData);
 
                                 // レスポンスが配列の場合とオブジェクトの場合を処理
                                 const googleEvents = Array.isArray(googleData) ? googleData : (googleData.events || []);
 
-                                debugLog('Googleカレンダーイベント取得数', googleEvents.length);
-                                if (googleEvents.length > 0) {
+                                debugLog('📊 Googleカレンダー予定取得数', googleEvents.length);
+
+                                // length が 0 でも処理を続行
+                                if (googleEvents.length === 0) {
+                                    debugLog('⚠️ Googleカレンダー予定が0件です');
+                                } else {
                                     allEvents.push(...googleEvents);
-                                    debugLog('✅ Googleカレンダーイベント取得成功');
+                                    debugLog('✅ Googleカレンダー予定をカレンダーに追加しました', googleEvents.length + '件');
                                 }
                             } else {
-                                debugLog('⚠️ Googleカレンダーイベント取得スキップ (未接続またはエラー)');
+                                const errorText = await googleResponse.text();
+                                debugError('❌ Googleカレンダー予定取得エラー', {
+                                    status: googleResponse.status,
+                                    statusText: googleResponse.statusText,
+                                    body: errorText
+                                });
                             }
                         } catch (googleError) {
-                            debugError('Googleカレンダーイベント取得エラー (スキップ)', googleError);
-                            // Google Calendar エラーは無視して続行
+                            debugError('💥 Googleカレンダー予定取得で例外発生', {
+                                message: googleError.message,
+                                stack: googleError.stack
+                            });
                         }
                         @endauth
 
