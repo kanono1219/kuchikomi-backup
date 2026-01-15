@@ -566,11 +566,16 @@
 
                             const allEvents = [];
 
+                            // ★追加★ キャッシュバスター（タイムスタンプを追加してキャッシュを無効化）
+                            const cacheBuster = new Date().getTime();
+
                             // 1. webアプリ側のイベントを取得
-                            const appUrl = `/calendar/events?start=${info.start.toISOString()}&end=${info.end.toISOString()}`;
+                            const appUrl = `/calendar/events?start=${info.start.toISOString()}&end=${info.end.toISOString()}&_=${cacheBuster}`;
                             debugLog('アプリイベントAPI URL', appUrl);
 
-                            const appResponse = await fetch(appUrl);
+                            const appResponse = await fetch(appUrl, {
+                                cache: 'no-store' // キャッシュを使用しない
+                            });
                             debugLog('アプリイベントレスポンスステータス', appResponse.status);
 
                             if (!appResponse.ok) {
@@ -584,10 +589,11 @@
                             // 2. Google Calendar 予定を取得（認証済みユーザーのみ）
                             @auth
                             try {
-                                const googleUrl = `/calendar/google-events?start=${info.start.toISOString()}&end=${info.end.toISOString()}`;
+                                const googleUrl = `/calendar/google-events?start=${info.start.toISOString()}&end=${info.end.toISOString()}&_=${cacheBuster}`;
                                 debugLog('🔍 GoogleカレンダーAPI URL', googleUrl);
 
                                 const googleResponse = await fetch(googleUrl, {
+                                    cache: 'no-store', // キャッシュを使用しない
                                     headers: {
                                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                                     }
@@ -694,6 +700,23 @@
                 calendar.render();
                 debugLog('✅ FullCalendar レンダリング完了');
 
+                // ★追加★ ページが表示されたときにカレンダーを更新
+                document.addEventListener('visibilitychange', function() {
+                    if (!document.hidden) {
+                        debugLog('🔄 ページが再表示されたため、カレンダーを更新します');
+                        calendar.refetchEvents();
+                    }
+                });
+
+                // ★追加★ ページ読み込み時に強制的にイベントを再取得
+                window.addEventListener('pageshow', function(event) {
+                    if (event.persisted) {
+                        // ブラウザのキャッシュから復元された場合
+                        debugLog('🔄 ページがキャッシュから復元されたため、カレンダーを更新します');
+                        calendar.refetchEvents();
+                    }
+                });
+
                 // 本日のイベントを表示
                 const today = new Date().toISOString().split('T')[0];
                 debugLog('本日の日付', today);
@@ -718,12 +741,17 @@
 
                     const allEvents = [];
 
+                    // ★追加★ キャッシュバスター
+                    const cacheBuster = new Date().getTime();
+
                     // 1. webアプリのイベント取得
-                    const appUrl = `/calendar/events?start=${startDateTime}&end=${endDateTime}`;
+                    const appUrl = `/calendar/events?start=${startDateTime}&end=${endDateTime}&_=${cacheBuster}`;
                     debugLog('日付別アプリAPI URL', appUrl);
 
                     try {
-                        const appResponse = await fetch(appUrl);
+                        const appResponse = await fetch(appUrl, {
+                            cache: 'no-store'
+                        });
                         debugLog('日付別アプリレスポンスステータス', appResponse.status);
                         if (appResponse.ok) {
                             const appEvents = await appResponse.json();
@@ -737,10 +765,11 @@
                     // 2. Googleカレンダーのイベント取得（認証済みユーザーのみ）
                     @auth
                     try {
-                        const googleUrl = `/calendar/google-events?start=${startDateTime}&end=${endDateTime}`;
+                        const googleUrl = `/calendar/google-events?start=${startDateTime}&end=${endDateTime}&_=${cacheBuster}`;
                         debugLog('日付別GoogleカレンダーAPI URL', googleUrl);
 
                         const googleResponse = await fetch(googleUrl, {
+                            cache: 'no-store',
                             headers: {
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                             }
