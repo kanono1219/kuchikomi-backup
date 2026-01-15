@@ -248,6 +248,7 @@ class EventController extends Controller
                         'user_id' => $user->id,
                         'success' => $syncResult['success'],
                         'imported_count' => $syncResult['imported_count'],
+                        'deleted_count' => $syncResult['deleted_count'] ?? 0,
                         'message' => $syncResult['message']
                     ]);
 

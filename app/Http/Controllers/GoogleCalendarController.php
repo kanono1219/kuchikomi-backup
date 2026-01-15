@@ -747,9 +747,11 @@ class GoogleCalendarController extends Controller
             Log::info('Fetched ' . count($googleEvents) . ' events from Google Calendar for auto-sync');
 
             $importedCount = 0;
+            $googleEventIds = []; // Googleカレンダーから取得したイベントIDのリスト
 
             foreach ($googleEvents as $googleEvent) {
                 $googleEventId = $googleEvent->getId();
+                $googleEventIds[] = $googleEventId; // IDをリストに追加
 
                 // ★重要★ webアプリのイベントで既に追加済みか確認
                 // webアプリのイベントがGoogleカレンダーに追加されている場合はスキップ
@@ -828,17 +830,57 @@ class GoogleCalendarController extends Controller
                 }
             }
 
+            // ★追加★ Googleカレンダーで削除されたイベントをローカルDBからも削除
+            $deletedCount = 0;
+
+            // ローカルDBの全イベントを取得（対象期間内のみ）
+            $localEvents = GoogleCalendarEvent::where('user_id', $user->id)
+                ->where('end_date', '>=', $timeMin)
+                ->where('start_date', '<=', $timeMax)
+                ->get();
+
+            Log::info('Checking for deleted events', [
+                'user_id' => $user->id,
+                'local_event_count' => $localEvents->count(),
+                'google_event_count' => count($googleEventIds)
+            ]);
+
+            foreach ($localEvents as $localEvent) {
+                // Googleカレンダーに存在しないイベントを削除
+                if (!in_array($localEvent->google_event_id, $googleEventIds)) {
+                    Log::info('Deleting event removed from Google Calendar', [
+                        'local_event_id' => $localEvent->id,
+                        'google_event_id' => $localEvent->google_event_id,
+                        'event_name' => $localEvent->name
+                    ]);
+
+                    $localEvent->delete();
+                    $deletedCount++;
+                }
+            }
+
             Log::info('Auto-sync completed', [
                 'user_id' => $user->id,
-                'imported_count' => $importedCount
+                'imported_count' => $importedCount,
+                'deleted_count' => $deletedCount
             ]);
+
+            $message = '';
+            if ($importedCount > 0 && $deletedCount > 0) {
+                $message = "{$importedCount}件の新しいイベントをインポートし、{$deletedCount}件のイベントを削除しました";
+            } elseif ($importedCount > 0) {
+                $message = "{$importedCount}件の新しいイベントをインポートしました";
+            } elseif ($deletedCount > 0) {
+                $message = "{$deletedCount}件のイベントを削除しました";
+            } else {
+                $message = '新しいイベントはありませんでした';
+            }
 
             return [
                 'success' => true,
-                'message' => $importedCount > 0
-                    ? "{$importedCount}件の新しいイベントをインポートしました"
-                    : '新しいイベントはありませんでした',
+                'message' => $message,
                 'imported_count' => $importedCount,
+                'deleted_count' => $deletedCount,
             ];
 
         } catch (Exception $e) {
