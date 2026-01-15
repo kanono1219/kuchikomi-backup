@@ -262,7 +262,7 @@ class CalendarController extends Controller
 
             // FullCalendar フォーマットに変換
             $googleEvents = $googleEvents->map(function ($event) {
-                return [
+                $formattedEvent = [
                     'id' => 'gc_' . $event->id, // Prefix to distinguish from app events
                     'title' => $event->name,
                     'start' => $event->start_date ? $event->start_date->format('Y-m-d\TH:i:s') : null,
@@ -277,11 +277,29 @@ class CalendarController extends Controller
                         'html_link' => $event->html_link ?? '',
                     ]
                 ];
+
+                Log::info('Formatted Google Calendar event', [
+                    'db_id' => $event->id,
+                    'google_event_id' => $event->google_event_id,
+                    'title' => $event->name,
+                    'start' => $formattedEvent['start'],
+                    'end' => $formattedEvent['end']
+                ]);
+
+                return $formattedEvent;
             });
 
             Log::info('Google Calendar events mapped to FullCalendar format', [
                 'user_id' => $user->id,
-                'final_count' => $googleEvents->count()
+                'final_count' => $googleEvents->count(),
+                'events_summary' => $googleEvents->map(function($e) {
+                    return [
+                        'id' => $e['id'],
+                        'title' => $e['title'],
+                        'start' => $e['start'],
+                        'end' => $e['end']
+                    ];
+                })->toArray()
             ]);
 
             return response()->json($googleEvents->values());

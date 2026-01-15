@@ -777,12 +777,26 @@ class GoogleCalendarController extends Controller
                     $startDateTime = $googleEvent->getStart()->getDateTime();
                     $endDateTime = $googleEvent->getEnd()->getDateTime();
 
-                    // 終日イベントの場合は日付のみ
+                    // ★修正★ 終日イベントの場合は日付のみ
+                    $isAllDay = false;
                     if (!$startDateTime) {
+                        // 終日イベント
+                        $isAllDay = true;
                         $startDateTime = $googleEvent->getStart()->getDate() . ' 00:00:00';
-                    }
-                    if (!$endDateTime) {
-                        $endDateTime = $googleEvent->getEnd()->getDate() . ' 23:59:59';
+
+                        // ★重要★ Googleカレンダーの終日イベントは終了日が翌日の00:00:00になっているため、
+                        // 1日引いて23:59:59にする（例：1/15の終日イベントは end=1/16 → 1/15 23:59:59に修正）
+                        $endDate = new \DateTime($googleEvent->getEnd()->getDate(), new \DateTimeZone('Asia/Tokyo'));
+                        $endDate->modify('-1 day');
+                        $endDateTime = $endDate->format('Y-m-d') . ' 23:59:59';
+
+                        Log::info('Processing all-day event', [
+                            'event_name' => $googleEvent->getSummary(),
+                            'original_start' => $googleEvent->getStart()->getDate(),
+                            'original_end' => $googleEvent->getEnd()->getDate(),
+                            'adjusted_start' => $startDateTime,
+                            'adjusted_end' => $endDateTime
+                        ]);
                     }
 
                     // GoogleカレンダーイベントをローカルDBに保存
@@ -801,7 +815,8 @@ class GoogleCalendarController extends Controller
 
                     Log::info('Google Calendar event auto-synced', [
                         'gc_event_id' => $gcEvent->id,
-                        'google_event_id' => $googleEventId
+                        'google_event_id' => $googleEventId,
+                        'is_all_day' => $isAllDay
                     ]);
                 } catch (Exception $e) {
                     Log::warning('Failed to auto-sync Google Calendar event', [
