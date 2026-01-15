@@ -231,26 +231,48 @@ class EventController extends Controller
     public function index()
     {
         try {
-            // ★追加★ Google Calendar 自動同期（認証済みユーザーのみ）
+            // ★Google Calendar 自動同期（認証済みユーザーのみ）★
+            // ホーム画面を開くたびにGoogleカレンダーから新しいイベントをインポート
             $user = Auth::user();
             if ($user && $user->google_calendar_connected && $user->google_calendar_token) {
                 try {
+                    Log::info('Starting Google Calendar auto-sync on home page load', [
+                        'user_id' => $user->id,
+                        'user_email' => $user->email
+                    ]);
+
                     $googleCalendarController = new GoogleCalendarController();
                     $syncResult = $googleCalendarController->autoSync();
 
-                    if ($syncResult['success'] && $syncResult['imported_count'] > 0) {
-                        Log::info('Auto-synced Google Calendar events on home page', [
-                            'user_id' => $user->id,
-                            'imported_count' => $syncResult['imported_count']
-                        ]);
-                        // 成功メッセージは表示しない（毎回表示されると煩雑になるため）
-                    }
+                    Log::info('Google Calendar auto-sync completed', [
+                        'user_id' => $user->id,
+                        'success' => $syncResult['success'],
+                        'imported_count' => $syncResult['imported_count'],
+                        'message' => $syncResult['message']
+                    ]);
+
+                    // デバッグ用：同期後のgoogle_calendar_eventsテーブルの件数を確認
+                    $totalGoogleEvents = \App\Models\GoogleCalendarEvent::where('user_id', $user->id)->count();
+                    Log::info('Total Google Calendar events in DB after sync', [
+                        'user_id' => $user->id,
+                        'total_count' => $totalGoogleEvents
+                    ]);
+
                 } catch (Exception $e) {
                     Log::error('Auto-sync failed on home page load', [
                         'user_id' => $user->id,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
                     ]);
                     // エラーが発生してもページ表示は継続
+                }
+            } else {
+                if ($user) {
+                    Log::info('User not connected to Google Calendar', [
+                        'user_id' => $user->id,
+                        'google_calendar_connected' => $user->google_calendar_connected,
+                        'has_token' => !empty($user->google_calendar_token)
+                    ]);
                 }
             }
 
