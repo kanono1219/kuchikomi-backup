@@ -251,12 +251,19 @@ class EventController extends Controller
                         'message' => $syncResult['message']
                     ]);
 
+                    // ★追加★ 再接続が必要な場合、エラーメッセージを表示
+                    if (isset($syncResult['reconnect_required']) && $syncResult['reconnect_required']) {
+                        session()->flash('error', $syncResult['message'] . ' マイページから再度Googleカレンダーと連携してください。');
+                    }
+
                     // デバッグ用：同期後のgoogle_calendar_eventsテーブルの件数を確認
-                    $totalGoogleEvents = \App\Models\GoogleCalendarEvent::where('user_id', $user->id)->count();
-                    Log::info('Total Google Calendar events in DB after sync', [
-                        'user_id' => $user->id,
-                        'total_count' => $totalGoogleEvents
-                    ]);
+                    if ($syncResult['success']) {
+                        $totalGoogleEvents = \App\Models\GoogleCalendarEvent::where('user_id', $user->id)->count();
+                        Log::info('Total Google Calendar events in DB after sync', [
+                            'user_id' => $user->id,
+                            'total_count' => $totalGoogleEvents
+                        ]);
+                    }
 
                 } catch (Exception $e) {
                     Log::error('Auto-sync failed on home page load', [

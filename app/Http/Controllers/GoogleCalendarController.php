@@ -644,15 +644,85 @@ class GoogleCalendarController extends Controller
             $tokenData = json_decode($user->google_calendar_token, true);
             $this->client->setAccessToken($tokenData);
 
-            // トークンが期限切れの場合は更新
+            // ★改善★ トークンが期限切れの場合は更新（エラーハンドリング追加）
             if ($this->client->isAccessTokenExpired()) {
                 $refreshToken = $tokenData['refresh_token'] ?? null;
                 if ($refreshToken) {
-                    $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
-                    $newToken = $this->client->getAccessToken();
+                    try {
+                        $newTokenData = $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
+
+                        // エラーチェック
+                        if (isset($newTokenData['error'])) {
+                            Log::error('Token refresh failed - invalid grant', [
+                                'user_id' => $user->id,
+                                'error' => $newTokenData['error'],
+                                'error_description' => $newTokenData['error_description'] ?? ''
+                            ]);
+
+                            // トークンが無効な場合、接続状態をリセット
+                            DB::table('users')
+                                ->where('id', $user->id)
+                                ->update([
+                                    'google_calendar_connected' => false,
+                                    'google_calendar_token' => null
+                                ]);
+
+                            return [
+                                'success' => false,
+                                'message' => 'Googleカレンダーとの接続が無効になりました。再度接続してください。',
+                                'imported_count' => 0,
+                                'error' => 'token_expired',
+                                'reconnect_required' => true
+                            ];
+                        }
+
+                        // トークン更新成功
+                        DB::table('users')
+                            ->where('id', $user->id)
+                            ->update(['google_calendar_token' => json_encode($newTokenData)]);
+
+                        Log::info('Access token refreshed successfully', ['user_id' => $user->id]);
+
+                    } catch (\Exception $e) {
+                        Log::error('Token refresh exception', [
+                            'user_id' => $user->id,
+                            'error' => $e->getMessage()
+                        ]);
+
+                        // トークン更新に失敗した場合、接続状態をリセット
+                        DB::table('users')
+                            ->where('id', $user->id)
+                            ->update([
+                                'google_calendar_connected' => false,
+                                'google_calendar_token' => null
+                            ]);
+
+                        return [
+                            'success' => false,
+                            'message' => 'Googleカレンダーとの接続が無効になりました。再度接続してください。',
+                            'imported_count' => 0,
+                            'error' => 'token_refresh_failed',
+                            'reconnect_required' => true
+                        ];
+                    }
+                } else {
+                    // リフレッシュトークンがない場合
+                    Log::error('No refresh token available', ['user_id' => $user->id]);
+
                     DB::table('users')
                         ->where('id', $user->id)
-                        ->update(['google_calendar_token' => json_encode($newToken)]);
+                        ->update([
+                            'google_calendar_connected' => false,
+                            'google_calendar_token' => null
+                        ]);
+
+                    return [
+                        'success' => false,
+                        'message' => 'Googleカレンダーとの接続が無効になりました。再度接続してください。',
+                        'imported_count' => 0,
+                        'error' => 'no_refresh_token',
+                        'reconnect_required' => true
+                    ];
                 }
             }
 
