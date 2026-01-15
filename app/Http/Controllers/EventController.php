@@ -234,53 +234,81 @@ class EventController extends Controller
             // ★Google Calendar 自動同期（認証済みユーザーのみ）★
             // ホーム画面を開くたびにGoogleカレンダーから新しいイベントをインポート
             $user = Auth::user();
+
+            Log::info('=== EventController::index() called ===', [
+                'authenticated' => !is_null($user),
+                'user_id' => $user ? $user->id : null,
+                'user_email' => $user ? $user->email : null
+            ]);
+
             if ($user && $user->google_calendar_connected && $user->google_calendar_token) {
                 try {
-                    Log::info('Starting Google Calendar auto-sync on home page load', [
+                    Log::info('✅ Google Calendar auto-sync conditions met', [
                         'user_id' => $user->id,
-                        'user_email' => $user->email
+                        'user_email' => $user->email,
+                        'google_calendar_connected' => $user->google_calendar_connected,
+                        'has_token' => !empty($user->google_calendar_token)
                     ]);
 
                     $googleCalendarController = new GoogleCalendarController();
                     $syncResult = $googleCalendarController->autoSync();
 
-                    Log::info('Google Calendar auto-sync completed', [
+                    Log::info('📊 Google Calendar auto-sync result', [
                         'user_id' => $user->id,
                         'success' => $syncResult['success'],
                         'imported_count' => $syncResult['imported_count'],
                         'deleted_count' => $syncResult['deleted_count'] ?? 0,
-                        'message' => $syncResult['message']
+                        'message' => $syncResult['message'],
+                        'reconnect_required' => $syncResult['reconnect_required'] ?? false
                     ]);
 
-                    // ★追加★ 再接続が必要な場合、エラーメッセージを表示
+                    // ★追加★ 同期結果を画面に表示（開発時のデバッグ用）
+                    if ($syncResult['success']) {
+                        if ($syncResult['imported_count'] > 0 || ($syncResult['deleted_count'] ?? 0) > 0) {
+                            session()->flash('success', '✅ Googleカレンダー同期: ' . $syncResult['message']);
+                        }
+                    }
+
+                    // ★修正★ 再接続が必要な場合、エラーメッセージを表示
                     if (isset($syncResult['reconnect_required']) && $syncResult['reconnect_required']) {
-                        session()->flash('error', $syncResult['message'] . ' マイページから再度Googleカレンダーと連携してください。');
+                        session()->flash('error', '❌ ' . $syncResult['message'] . ' マイページから再度Googleカレンダーと連携してください。');
                     }
 
                     // デバッグ用：同期後のgoogle_calendar_eventsテーブルの件数を確認
                     if ($syncResult['success']) {
                         $totalGoogleEvents = \App\Models\GoogleCalendarEvent::where('user_id', $user->id)->count();
-                        Log::info('Total Google Calendar events in DB after sync', [
+                        Log::info('📈 Total Google Calendar events in DB after sync', [
                             'user_id' => $user->id,
                             'total_count' => $totalGoogleEvents
                         ]);
                     }
 
                 } catch (Exception $e) {
-                    Log::error('Auto-sync failed on home page load', [
+                    Log::error('❌ Auto-sync exception on home page load', [
                         'user_id' => $user->id,
                         'error' => $e->getMessage(),
                         'trace' => $e->getTraceAsString()
                     ]);
-                    // エラーが発生してもページ表示は継続
+
+                    // エラーをユーザーに表示
+                    session()->flash('error', 'Googleカレンダー同期エラー: ' . $e->getMessage());
                 }
             } else {
+                // 同期が実行されない理由をログに記録
                 if ($user) {
-                    Log::info('User not connected to Google Calendar', [
+                    Log::warning('⚠️ Google Calendar auto-sync skipped', [
                         'user_id' => $user->id,
                         'google_calendar_connected' => $user->google_calendar_connected,
-                        'has_token' => !empty($user->google_calendar_token)
+                        'has_token' => !empty($user->google_calendar_token),
+                        'reason' => !$user->google_calendar_connected ? 'not_connected' : (!$user->google_calendar_token ? 'no_token' : 'unknown')
                     ]);
+
+                    // ユーザーに通知
+                    if (!$user->google_calendar_connected || !$user->google_calendar_token) {
+                        session()->flash('info', 'ℹ️ Googleカレンダーと連携するには、マイページから接続してください。');
+                    }
+                } else {
+                    Log::info('ℹ️ User not authenticated - sync skipped');
                 }
             }
 
